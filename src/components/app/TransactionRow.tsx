@@ -9,7 +9,7 @@ export function TransactionRow({
   currency,
 }: {
   tx: Transaction;
-  category?: Category;
+  category?: Category | undefined;
   currency: string;
 }) {
   const isIncome = tx.type === "income";

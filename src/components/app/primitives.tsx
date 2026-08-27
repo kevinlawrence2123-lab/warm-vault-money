@@ -9,8 +9,8 @@ export function Card({
   wavy = false,
 }: {
   children: ReactNode;
-  className?: string;
-  wavy?: boolean;
+  className?: string | undefined;
+  wavy?: boolean | undefined;
 }) {
   return (
     <div
@@ -30,7 +30,7 @@ export function SectionHeader({
   action,
 }: {
   title: string;
-  action?: ReactNode;
+  action?: ReactNode | undefined;
 }) {
   return (
     <div className="mb-3 flex items-center justify-between gap-3">
@@ -46,10 +46,10 @@ export function IconBubble({
   size = "md",
   active = false,
 }: {
-  icon?: string | null;
-  color?: string | null;
-  size?: "sm" | "md" | "lg";
-  active?: boolean;
+  icon?: string | null | undefined;
+  color?: string | null | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
+  active?: boolean | undefined;
 }) {
   const Icon = iconFor(icon);
   const dims = size === "sm" ? "h-9 w-9" : size === "lg" ? "h-14 w-14" : "h-11 w-11";
@@ -76,8 +76,8 @@ export function Amount({
 }: {
   value: number;
   currency: string;
-  className?: string;
-  centsClassName?: string;
+  className?: string | undefined;
+  centsClassName?: string | undefined;
 }) {
   const { main, cents } = splitMoney(value, currency);
   return (
@@ -96,8 +96,8 @@ export function ProgressBar({
   className,
 }: {
   value: number;
-  tone?: "gold" | "danger" | "warning" | "muted";
-  className?: string;
+  tone?: "gold" | "danger" | "warning" | "muted" | undefined;
+  className?: string | undefined;
 }) {
   const pct = Math.max(0, Math.min(100, value));
   return (
@@ -123,9 +123,9 @@ export function Chip({
   className,
 }: {
   children: ReactNode;
-  active?: boolean;
-  onClick?: () => void;
-  className?: string;
+  active?: boolean | undefined;
+  onClick?: (() => void) | undefined;
+  className?: string | undefined;
 }) {
   return (
     <button
@@ -151,9 +151,9 @@ export function GlassIconButton({
   className,
 }: {
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
   label: string;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <button
@@ -176,8 +176,8 @@ export function EmptyState({
   action,
 }: {
   title: string;
-  description?: string;
-  action?: ReactNode;
+  description?: string | undefined;
+  action?: ReactNode | undefined;
 }) {
   return (
     <div className="surface-card flex flex-col items-center gap-2 px-6 py-10 text-center">
