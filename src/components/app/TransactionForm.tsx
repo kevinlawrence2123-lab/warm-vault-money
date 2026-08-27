@@ -86,7 +86,10 @@ export function TransactionForm({ existing }: { existing?: Transaction | undefin
     setBusy(true);
     const { error } = await supabase.from("transactions").delete().eq("id", existing.id);
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     invalidate();
     navigate({ to: "/transactions" });
   }
