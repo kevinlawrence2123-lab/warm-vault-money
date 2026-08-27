@@ -155,7 +155,7 @@ function TransactionsPage() {
                 {items.map((t) => (
                   <TransactionRow
                     key={t.id}
-                    transaction={t}
+                    tx={t}
                     category={categories.find((c) => c.id === t.category_id)}
                     currency={currency}
                   />

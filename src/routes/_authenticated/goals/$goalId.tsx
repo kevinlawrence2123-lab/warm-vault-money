@@ -67,7 +67,7 @@ function GoalDetail() {
     const next = goal.current_amount + value;
     const { error } = await supabase
       .from("goal_contributions")
-      .insert({ goal_id: goal.id, amount: value });
+      .insert({ goal_id: goal.id, amount: value, user_id: (await supabase.auth.getUser()).data.user!.id });
     if (!error) {
       await supabase
         .from("savings_goals")
