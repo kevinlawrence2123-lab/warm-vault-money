@@ -13,21 +13,40 @@ import {
   type Transaction,
 } from "@/lib/data";
 
-export function TransactionForm({ existing }: { existing?: Transaction | undefined }) {
+export interface TransactionPrefill {
+  amount?: string | undefined;
+  type?: "expense" | "income" | undefined;
+  accountName?: string | undefined;
+  note?: string | undefined;
+  detectionId?: string | undefined;
+}
+
+export function TransactionForm({
+  existing,
+  prefill,
+}: {
+  existing?: Transaction | undefined;
+  prefill?: TransactionPrefill | undefined;
+}) {
   const navigate = useNavigate();
   const invalidate = useInvalidateAll();
   const { data: profile } = useProfile();
   const { data: categories = [] } = useCategories();
   const { data: accounts = [] } = useAccounts();
 
-  const [type, setType] = useState<"expense" | "income">(existing?.type ?? "expense");
-  const [amount, setAmount] = useState(existing ? String(existing.amount) : "");
+  const [type, setType] = useState<"expense" | "income">(
+    existing?.type ?? prefill?.type ?? "expense",
+  );
+  const [amount, setAmount] = useState(
+    existing ? String(existing.amount) : (prefill?.amount ?? ""),
+  );
   const [categoryId, setCategoryId] = useState<string | null>(existing?.category_id ?? null);
   const [accountId, setAccountId] = useState<string | null>(existing?.account_id ?? null);
   const [date, setDate] = useState(existing?.date ?? new Date().toISOString().slice(0, 10));
   const [method, setMethod] = useState(existing?.payment_method ?? "card");
-  const [note, setNote] = useState(existing?.note ?? "");
+  const [note, setNote] = useState(existing?.note ?? prefill?.note ?? "");
   const [receiptUrl, setReceiptUrl] = useState(existing?.receipt_url ?? "");
+
   const [busy, setBusy] = useState(false);
 
   const currency = profile?.currency ?? "USD";
