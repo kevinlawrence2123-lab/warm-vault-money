@@ -98,7 +98,14 @@ export function TransactionForm({
         ? await supabase.from("transactions").update(payload).eq("id", existing.id)
         : await supabase.from("transactions").insert(payload);
       if (error) throw error;
+      if (prefill?.detectionId) {
+        await supabase
+          .from("detected_transactions")
+          .update({ status: "confirmed" })
+          .eq("id", prefill.detectionId);
+      }
       invalidate();
+
       toast.success(existing ? "Transaction updated" : "Transaction saved");
       navigate({ to: "/transactions" });
     } catch (err) {
