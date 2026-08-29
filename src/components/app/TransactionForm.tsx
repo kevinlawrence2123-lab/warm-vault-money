@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Camera, Check, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,25 +13,52 @@ import {
   type Transaction,
 } from "@/lib/data";
 
-export function TransactionForm({ existing }: { existing?: Transaction | undefined }) {
+export interface TransactionPrefill {
+  amount?: string | undefined;
+  type?: "expense" | "income" | undefined;
+  accountName?: string | undefined;
+  note?: string | undefined;
+  detectionId?: string | undefined;
+}
+
+export function TransactionForm({
+  existing,
+  prefill,
+}: {
+  existing?: Transaction | undefined;
+  prefill?: TransactionPrefill | undefined;
+}) {
   const navigate = useNavigate();
   const invalidate = useInvalidateAll();
   const { data: profile } = useProfile();
   const { data: categories = [] } = useCategories();
   const { data: accounts = [] } = useAccounts();
 
-  const [type, setType] = useState<"expense" | "income">(existing?.type ?? "expense");
-  const [amount, setAmount] = useState(existing ? String(existing.amount) : "");
+  const [type, setType] = useState<"expense" | "income">(
+    existing?.type ?? prefill?.type ?? "expense",
+  );
+  const [amount, setAmount] = useState(
+    existing ? String(existing.amount) : (prefill?.amount ?? ""),
+  );
   const [categoryId, setCategoryId] = useState<string | null>(existing?.category_id ?? null);
   const [accountId, setAccountId] = useState<string | null>(existing?.account_id ?? null);
   const [date, setDate] = useState(existing?.date ?? new Date().toISOString().slice(0, 10));
   const [method, setMethod] = useState(existing?.payment_method ?? "card");
-  const [note, setNote] = useState(existing?.note ?? "");
+  const [note, setNote] = useState(existing?.note ?? prefill?.note ?? "");
   const [receiptUrl, setReceiptUrl] = useState(existing?.receipt_url ?? "");
+
   const [busy, setBusy] = useState(false);
 
   const currency = profile?.currency ?? "USD";
   const visibleCategories = categories.filter((c) => c.type === type);
+
+  const prefillAccount = prefill?.accountName?.toLowerCase();
+  useEffect(() => {
+    if (existing || !prefillAccount || accountId) return;
+    const match = accounts.find((a) => a.name.toLowerCase() === prefillAccount);
+    if (match) setAccountId(match.id);
+  }, [accounts, prefillAccount, accountId, existing]);
+
 
   async function uploadReceipt(file: File) {
     const { data: userData } = await supabase.auth.getUser();
@@ -71,7 +98,14 @@ export function TransactionForm({ existing }: { existing?: Transaction | undefin
         ? await supabase.from("transactions").update(payload).eq("id", existing.id)
         : await supabase.from("transactions").insert(payload);
       if (error) throw error;
+      if (prefill?.detectionId) {
+        await supabase
+          .from("detected_transactions")
+          .update({ status: "confirmed" })
+          .eq("id", prefill.detectionId);
+      }
       invalidate();
+
       toast.success(existing ? "Transaction updated" : "Transaction saved");
       navigate({ to: "/transactions" });
     } catch (err) {

@@ -109,6 +109,128 @@ export type Database = {
         }
         Relationships: []
       }
+      detected_transactions: {
+        Row: {
+          amount: number
+          app_name: string
+          category_id: string | null
+          created_at: string
+          detected_at: string
+          id: string
+          raw_text: string | null
+          source_key: string
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          app_name?: string
+          category_id?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          raw_text?: string | null
+          source_key?: string
+          status?: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          app_name?: string
+          category_id?: string | null
+          created_at?: string
+          detected_at?: string
+          id?: string
+          raw_text?: string | null
+          source_key?: string
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detected_transactions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      detection_muted_patterns: {
+        Row: {
+          created_at: string
+          id: string
+          pattern: string
+          source_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pattern: string
+          source_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pattern?: string
+          source_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      detection_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          permission_granted: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          permission_granted?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          permission_granted?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      detection_sources: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          key: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          key: string
+          label: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          key?: string
+          label?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goal_contributions: {
         Row: {
           amount: number

@@ -12,11 +12,15 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as QuickAddRouteImport } from './routes/quick-add'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedBudgetRouteImport } from './routes/_authenticated/budget'
+import { Route as AuthenticatedDetectionsRouteImport } from './routes/_authenticated/detections'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedDetectionIndexRouteImport } from './routes/_authenticated/detection/index'
+import { Route as AuthenticatedDetectionIphoneRouteImport } from './routes/_authenticated/detection/iphone'
 import { Route as AuthenticatedGoalsIndexRouteImport } from './routes/_authenticated/goals/index'
 import { Route as AuthenticatedGoalsGoalIdRouteImport } from './routes/_authenticated/goals/$goalId'
 import { Route as AuthenticatedTransactionsIndexRouteImport } from './routes/_authenticated/transactions/index'
@@ -37,6 +41,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuickAddRoute = QuickAddRouteImport.update({
+  id: '/quick-add',
+  path: '/quick-add',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
   id: '/accounts',
   path: '/accounts',
@@ -45,6 +54,11 @@ const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
 const AuthenticatedBudgetRoute = AuthenticatedBudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDetectionsRoute = AuthenticatedDetectionsRouteImport.update({
+  id: '/detections',
+  path: '/detections',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
@@ -62,6 +76,18 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDetectionIndexRoute =
+  AuthenticatedDetectionIndexRouteImport.update({
+    id: '/detection/',
+    path: '/detection/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedDetectionIphoneRoute =
+  AuthenticatedDetectionIphoneRouteImport.update({
+    id: '/detection/iphone',
+    path: '/detection/iphone',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedGoalsIndexRoute = AuthenticatedGoalsIndexRouteImport.update({
   id: '/goals/',
   path: '/goals/',
@@ -95,28 +121,36 @@ const AuthenticatedTransactionsNewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/quick-add': typeof QuickAddRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/budget': typeof AuthenticatedBudgetRoute
+  '/detections': typeof AuthenticatedDetectionsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/detection/iphone': typeof AuthenticatedDetectionIphoneRoute
   '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/detection/': typeof AuthenticatedDetectionIndexRoute
   '/goals/': typeof AuthenticatedGoalsIndexRoute
   '/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/quick-add': typeof QuickAddRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/budget': typeof AuthenticatedBudgetRoute
+  '/detections': typeof AuthenticatedDetectionsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/detection/iphone': typeof AuthenticatedDetectionIphoneRoute
   '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/detection': typeof AuthenticatedDetectionIndexRoute
   '/goals': typeof AuthenticatedGoalsIndexRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -125,14 +159,18 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/quick-add': typeof QuickAddRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/budget': typeof AuthenticatedBudgetRoute
+  '/_authenticated/detections': typeof AuthenticatedDetectionsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/detection/iphone': typeof AuthenticatedDetectionIphoneRoute
   '/_authenticated/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/_authenticated/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/_authenticated/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/_authenticated/detection/': typeof AuthenticatedDetectionIndexRoute
   '/_authenticated/goals/': typeof AuthenticatedGoalsIndexRoute
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -141,28 +179,36 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/quick-add'
     | '/accounts'
     | '/budget'
+    | '/detections'
     | '/home'
     | '/onboarding'
     | '/profile'
+    | '/detection/iphone'
     | '/goals/$goalId'
     | '/transactions/$transactionId'
     | '/transactions/new'
+    | '/detection/'
     | '/goals/'
     | '/transactions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/quick-add'
     | '/accounts'
     | '/budget'
+    | '/detections'
     | '/home'
     | '/onboarding'
     | '/profile'
+    | '/detection/iphone'
     | '/goals/$goalId'
     | '/transactions/$transactionId'
     | '/transactions/new'
+    | '/detection'
     | '/goals'
     | '/transactions'
   id:
@@ -170,14 +216,18 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/quick-add'
     | '/_authenticated/accounts'
     | '/_authenticated/budget'
+    | '/_authenticated/detections'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
+    | '/_authenticated/detection/iphone'
     | '/_authenticated/goals/$goalId'
     | '/_authenticated/transactions/$transactionId'
     | '/_authenticated/transactions/new'
+    | '/_authenticated/detection/'
     | '/_authenticated/goals/'
     | '/_authenticated/transactions/'
   fileRoutesById: FileRoutesById
@@ -186,6 +236,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  QuickAddRoute: typeof QuickAddRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -211,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quick-add': {
+      id: '/quick-add'
+      path: '/quick-add'
+      fullPath: '/quick-add'
+      preLoaderRoute: typeof QuickAddRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/accounts': {
       id: '/_authenticated/accounts'
       path: '/accounts'
@@ -223,6 +281,13 @@ declare module '@tanstack/react-router' {
       path: '/budget'
       fullPath: '/budget'
       preLoaderRoute: typeof AuthenticatedBudgetRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/detections': {
+      id: '/_authenticated/detections'
+      path: '/detections'
+      fullPath: '/detections'
+      preLoaderRoute: typeof AuthenticatedDetectionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
@@ -244,6 +309,20 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/detection/': {
+      id: '/_authenticated/detection/'
+      path: '/detection'
+      fullPath: '/detection/'
+      preLoaderRoute: typeof AuthenticatedDetectionIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/detection/iphone': {
+      id: '/_authenticated/detection/iphone'
+      path: '/detection/iphone'
+      fullPath: '/detection/iphone'
+      preLoaderRoute: typeof AuthenticatedDetectionIphoneRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/goals/': {
@@ -287,12 +366,15 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedBudgetRoute: typeof AuthenticatedBudgetRoute
+  AuthenticatedDetectionsRoute: typeof AuthenticatedDetectionsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedDetectionIphoneRoute: typeof AuthenticatedDetectionIphoneRoute
   AuthenticatedGoalsGoalIdRoute: typeof AuthenticatedGoalsGoalIdRoute
   AuthenticatedTransactionsTransactionIdRoute: typeof AuthenticatedTransactionsTransactionIdRoute
   AuthenticatedTransactionsNewRoute: typeof AuthenticatedTransactionsNewRoute
+  AuthenticatedDetectionIndexRoute: typeof AuthenticatedDetectionIndexRoute
   AuthenticatedGoalsIndexRoute: typeof AuthenticatedGoalsIndexRoute
   AuthenticatedTransactionsIndexRoute: typeof AuthenticatedTransactionsIndexRoute
 }
@@ -300,13 +382,16 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedBudgetRoute: AuthenticatedBudgetRoute,
+  AuthenticatedDetectionsRoute: AuthenticatedDetectionsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedDetectionIphoneRoute: AuthenticatedDetectionIphoneRoute,
   AuthenticatedGoalsGoalIdRoute: AuthenticatedGoalsGoalIdRoute,
   AuthenticatedTransactionsTransactionIdRoute:
     AuthenticatedTransactionsTransactionIdRoute,
   AuthenticatedTransactionsNewRoute: AuthenticatedTransactionsNewRoute,
+  AuthenticatedDetectionIndexRoute: AuthenticatedDetectionIndexRoute,
   AuthenticatedGoalsIndexRoute: AuthenticatedGoalsIndexRoute,
   AuthenticatedTransactionsIndexRoute: AuthenticatedTransactionsIndexRoute,
 }
@@ -318,6 +403,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  QuickAddRoute: QuickAddRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
