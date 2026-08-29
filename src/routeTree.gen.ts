@@ -15,6 +15,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as QuickAddRouteImport } from './routes/quick-add'
 import { Route as AuthenticatedAccountsRouteImport } from './routes/_authenticated/accounts'
 import { Route as AuthenticatedBudgetRouteImport } from './routes/_authenticated/budget'
+import { Route as AuthenticatedDetectionsRouteImport } from './routes/_authenticated/detections'
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
@@ -53,6 +54,11 @@ const AuthenticatedAccountsRoute = AuthenticatedAccountsRouteImport.update({
 const AuthenticatedBudgetRoute = AuthenticatedBudgetRouteImport.update({
   id: '/budget',
   path: '/budget',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDetectionsRoute = AuthenticatedDetectionsRouteImport.update({
+  id: '/detections',
+  path: '/detections',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedHomeRoute = AuthenticatedHomeRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/quick-add': typeof QuickAddRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/budget': typeof AuthenticatedBudgetRoute
+  '/detections': typeof AuthenticatedDetectionsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByTo {
   '/quick-add': typeof QuickAddRoute
   '/accounts': typeof AuthenticatedAccountsRoute
   '/budget': typeof AuthenticatedBudgetRoute
+  '/detections': typeof AuthenticatedDetectionsRoute
   '/home': typeof AuthenticatedHomeRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/profile': typeof AuthenticatedProfileRoute
@@ -154,6 +162,7 @@ export interface FileRoutesById {
   '/quick-add': typeof QuickAddRoute
   '/_authenticated/accounts': typeof AuthenticatedAccountsRoute
   '/_authenticated/budget': typeof AuthenticatedBudgetRoute
+  '/_authenticated/detections': typeof AuthenticatedDetectionsRoute
   '/_authenticated/home': typeof AuthenticatedHomeRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
@@ -173,6 +182,7 @@ export interface FileRouteTypes {
     | '/quick-add'
     | '/accounts'
     | '/budget'
+    | '/detections'
     | '/home'
     | '/onboarding'
     | '/profile'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/quick-add'
     | '/accounts'
     | '/budget'
+    | '/detections'
     | '/home'
     | '/onboarding'
     | '/profile'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/quick-add'
     | '/_authenticated/accounts'
     | '/_authenticated/budget'
+    | '/_authenticated/detections'
     | '/_authenticated/home'
     | '/_authenticated/onboarding'
     | '/_authenticated/profile'
@@ -269,6 +281,13 @@ declare module '@tanstack/react-router' {
       path: '/budget'
       fullPath: '/budget'
       preLoaderRoute: typeof AuthenticatedBudgetRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/detections': {
+      id: '/_authenticated/detections'
+      path: '/detections'
+      fullPath: '/detections'
+      preLoaderRoute: typeof AuthenticatedDetectionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/home': {
@@ -347,6 +366,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAccountsRoute: typeof AuthenticatedAccountsRoute
   AuthenticatedBudgetRoute: typeof AuthenticatedBudgetRoute
+  AuthenticatedDetectionsRoute: typeof AuthenticatedDetectionsRoute
   AuthenticatedHomeRoute: typeof AuthenticatedHomeRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
@@ -362,6 +382,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAccountsRoute: AuthenticatedAccountsRoute,
   AuthenticatedBudgetRoute: AuthenticatedBudgetRoute,
+  AuthenticatedDetectionsRoute: AuthenticatedDetectionsRoute,
   AuthenticatedHomeRoute: AuthenticatedHomeRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
