@@ -52,6 +52,14 @@ export function TransactionForm({
   const currency = profile?.currency ?? "USD";
   const visibleCategories = categories.filter((c) => c.type === type);
 
+  const prefillAccount = prefill?.accountName?.toLowerCase();
+  useEffect(() => {
+    if (existing || !prefillAccount || accountId) return;
+    const match = accounts.find((a) => a.name.toLowerCase() === prefillAccount);
+    if (match) setAccountId(match.id);
+  }, [accounts, prefillAccount, accountId, existing]);
+
+
   async function uploadReceipt(file: File) {
     const { data: userData } = await supabase.auth.getUser();
     const uid = userData.user?.id;
