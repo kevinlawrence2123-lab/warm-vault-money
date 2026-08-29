@@ -18,6 +18,7 @@ import { Route as AuthenticatedBudgetRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/home'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedDetectionIndexRouteImport } from './routes/_authenticated/detection/index'
 import { Route as AuthenticatedGoalsIndexRouteImport } from './routes/_authenticated/goals/index'
 import { Route as AuthenticatedGoalsGoalIdRouteImport } from './routes/_authenticated/goals/$goalId'
 import { Route as AuthenticatedTransactionsIndexRouteImport } from './routes/_authenticated/transactions/index'
@@ -68,6 +69,12 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDetectionIndexRoute =
+  AuthenticatedDetectionIndexRouteImport.update({
+    id: '/detection/',
+    path: '/detection/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedGoalsIndexRoute = AuthenticatedGoalsIndexRouteImport.update({
   id: '/goals/',
   path: '/goals/',
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/detection/': typeof AuthenticatedDetectionIndexRoute
   '/goals/': typeof AuthenticatedGoalsIndexRoute
   '/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -125,6 +133,7 @@ export interface FileRoutesByTo {
   '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/detection': typeof AuthenticatedDetectionIndexRoute
   '/goals': typeof AuthenticatedGoalsIndexRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -142,6 +151,7 @@ export interface FileRoutesById {
   '/_authenticated/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/_authenticated/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/_authenticated/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/_authenticated/detection/': typeof AuthenticatedDetectionIndexRoute
   '/_authenticated/goals/': typeof AuthenticatedGoalsIndexRoute
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
 }
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/goals/$goalId'
     | '/transactions/$transactionId'
     | '/transactions/new'
+    | '/detection/'
     | '/goals/'
     | '/transactions/'
   fileRoutesByTo: FileRoutesByTo
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/goals/$goalId'
     | '/transactions/$transactionId'
     | '/transactions/new'
+    | '/detection'
     | '/goals'
     | '/transactions'
   id:
@@ -190,6 +202,7 @@ export interface FileRouteTypes {
     | '/_authenticated/goals/$goalId'
     | '/_authenticated/transactions/$transactionId'
     | '/_authenticated/transactions/new'
+    | '/_authenticated/detection/'
     | '/_authenticated/goals/'
     | '/_authenticated/transactions/'
   fileRoutesById: FileRoutesById
@@ -266,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/detection/': {
+      id: '/_authenticated/detection/'
+      path: '/detection'
+      fullPath: '/detection/'
+      preLoaderRoute: typeof AuthenticatedDetectionIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/goals/': {
       id: '/_authenticated/goals/'
       path: '/goals'
@@ -313,6 +333,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGoalsGoalIdRoute: typeof AuthenticatedGoalsGoalIdRoute
   AuthenticatedTransactionsTransactionIdRoute: typeof AuthenticatedTransactionsTransactionIdRoute
   AuthenticatedTransactionsNewRoute: typeof AuthenticatedTransactionsNewRoute
+  AuthenticatedDetectionIndexRoute: typeof AuthenticatedDetectionIndexRoute
   AuthenticatedGoalsIndexRoute: typeof AuthenticatedGoalsIndexRoute
   AuthenticatedTransactionsIndexRoute: typeof AuthenticatedTransactionsIndexRoute
 }
@@ -327,6 +348,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTransactionsTransactionIdRoute:
     AuthenticatedTransactionsTransactionIdRoute,
   AuthenticatedTransactionsNewRoute: AuthenticatedTransactionsNewRoute,
+  AuthenticatedDetectionIndexRoute: AuthenticatedDetectionIndexRoute,
   AuthenticatedGoalsIndexRoute: AuthenticatedGoalsIndexRoute,
   AuthenticatedTransactionsIndexRoute: AuthenticatedTransactionsIndexRoute,
 }
