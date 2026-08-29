@@ -49,11 +49,11 @@ function ProfilePage() {
     setName(profile.name ?? "");
     setCurrency(profile.currency ?? "USD");
     setLanguage(profile.language ?? "en");
-    setPinLock(Boolean(profile.pin_lock_enabled));
+    setPinLock(Boolean(profile.pin_enabled));
     setNotifications(profile.notifications_enabled ?? true);
   }, [profile]);
 
-  async function save(patch: Record<string, unknown>) {
+  async function save(patch: Partial<{ name: string; currency: string; language: string; notifications_enabled: boolean; pin_enabled: boolean }>) {
     if (!profile) return;
     const { error } = await supabase.from("profiles").update(patch).eq("id", profile.id);
     if (error) {
@@ -152,7 +152,7 @@ function ProfilePage() {
             on={pinLock}
             onChange={(v) => {
               setPinLock(v);
-              void save({ pin_lock_enabled: v });
+              void save({ pin_enabled: v });
             }}
           />
         </Row>
