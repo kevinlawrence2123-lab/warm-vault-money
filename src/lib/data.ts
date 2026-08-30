@@ -187,6 +187,8 @@ export function useInvalidateAll() {
       "goals",
       "contributions",
       "budgets",
+      "detected-transactions",
+
     ]) {
       qc.invalidateQueries({ queryKey: [key] });
     }
