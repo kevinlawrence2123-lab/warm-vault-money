@@ -9,6 +9,7 @@ import {
   Landmark,
   LogOut,
   Moon,
+  Radar,
   Smartphone,
   Wallet,
 } from "lucide-react";
