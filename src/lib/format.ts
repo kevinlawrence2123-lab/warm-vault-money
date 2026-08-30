@@ -15,9 +15,41 @@ export const LANGUAGES = [
   { code: "es", label: "Español" },
 ];
 
-export function formatMoney(value: number, currency = "USD", compact = false) {
+export const DEFAULT_CURRENCY = "XOF";
+
+/* ---------- active locale ---------- */
+
+const LOCALE_BY_LANG: Record<string, string> = {
+  en: "en-US",
+  fr: "fr-FR",
+  es: "en-US", // Spanish translations pending — falls back to English formatting
+};
+
+let activeLang = "en";
+let activeLocale = "en-US";
+
+export function setActiveLanguage(lang: string) {
+  activeLang = LOCALE_BY_LANG[lang] ? lang : "en";
+  activeLocale = LOCALE_BY_LANG[activeLang]!;
+}
+
+export function localeFor(lang: string) {
+  return LOCALE_BY_LANG[lang] ?? "en-US";
+}
+
+export function getActiveLocale() {
+  return activeLocale;
+}
+
+const RELATIVE_DAYS: Record<string, { today: string; yesterday: string }> = {
+  en: { today: "Today", yesterday: "Yesterday" },
+  fr: { today: "Aujourd'hui", yesterday: "Hier" },
+  es: { today: "Today", yesterday: "Yesterday" },
+};
+
+export function formatMoney(value: number, currency = DEFAULT_CURRENCY, compact = false) {
   try {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(activeLocale, {
       style: "currency",
       currency,
       notation: compact ? "compact" : "standard",
@@ -30,7 +62,7 @@ export function formatMoney(value: number, currency = "USD", compact = false) {
 }
 
 /** Splits a formatted amount into main part and cents for oversized typography. */
-export function splitMoney(value: number, currency = "USD") {
+export function splitMoney(value: number, currency = DEFAULT_CURRENCY) {
   const formatted = formatMoney(value, currency);
   const match = formatted.match(/^(.*)([.,]\d{2})$/);
   if (!match) return { main: formatted, cents: "" };
@@ -42,7 +74,23 @@ export function monthKey(d: Date) {
 }
 
 export function monthLabel(d: Date) {
-  return d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  return d.toLocaleDateString(activeLocale, { month: "long", year: "numeric" });
+}
+
+export function shortDate(iso: string) {
+  return new Date(`${iso}T00:00:00`).toLocaleDateString(activeLocale, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+export function dateTimeLabel(value: string | Date) {
+  return new Date(value).toLocaleString(activeLocale, {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function dayLabel(iso: string) {
@@ -51,9 +99,10 @@ export function dayLabel(iso: string) {
   const yest = new Date();
   yest.setDate(today.getDate() - 1);
   const same = (a: Date, b: Date) => a.toDateString() === b.toDateString();
-  if (same(date, today)) return "Today";
-  if (same(date, yest)) return "Yesterday";
-  return date.toLocaleDateString("en-US", {
+  const words = RELATIVE_DAYS[activeLang] ?? RELATIVE_DAYS['en']!;
+  if (same(date, today)) return words.today;
+  if (same(date, yest)) return words.yesterday;
+  return date.toLocaleDateString(activeLocale, {
     weekday: "short",
     day: "numeric",
     month: "short",
