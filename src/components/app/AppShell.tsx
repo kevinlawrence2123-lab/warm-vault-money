@@ -24,6 +24,7 @@ const TABS = [
 
 export function TopBar({ title }: { title: string }) {
   const { data: profile } = useProfile();
+  const { data: detections = [] } = useDetectedTransactions();
   const navigate = useNavigate();
   const initial = (profile?.name || profile?.email || "?").charAt(0).toUpperCase();
 
@@ -41,12 +42,20 @@ export function TopBar({ title }: { title: string }) {
           >
             <Search size={17} />
           </GlassIconButton>
-          <GlassIconButton
-            label="Notifications"
-            onClick={() => navigate({ to: "/profile" })}
-          >
-            <Bell size={17} />
-          </GlassIconButton>
+          <div className="relative">
+            <GlassIconButton
+              label="Detected transactions"
+              onClick={() => navigate({ to: "/detections" })}
+            >
+              <Bell size={17} />
+            </GlassIconButton>
+            {detections.length > 0 && (
+              <span className="gold-gradient absolute -top-0.5 -right-0.5 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] font-bold text-primary-foreground">
+                {detections.length > 9 ? "9+" : detections.length}
+              </span>
+            )}
+          </div>
+
           <Link
             to="/profile"
             aria-label="Profile"
