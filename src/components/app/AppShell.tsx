@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { GlassIconButton } from "./primitives";
 import { useProfile } from "@/lib/data";
+import { useDetectedTransactions } from "@/lib/detection";
 
 const TABS = [
   { to: "/home", label: "Home", icon: Home },
