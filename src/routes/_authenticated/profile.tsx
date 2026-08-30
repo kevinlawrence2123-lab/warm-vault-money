@@ -9,6 +9,7 @@ import {
   Landmark,
   LogOut,
   Moon,
+  Radar,
   Smartphone,
   Wallet,
 } from "lucide-react";
@@ -175,6 +176,19 @@ function ProfilePage() {
           Automatic synchronisation is coming soon.
         </p>
         <div className="space-y-2">
+          <Link to="/detection" className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-3">
+            <Radar size={16} className="text-primary" />
+            <span className="flex-1 text-sm font-semibold">Automatic detection</span>
+            <ChevronRight size={16} className="text-muted-foreground" />
+          </Link>
+          <Link
+            to="/detection/iphone"
+            className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-3"
+          >
+            <Smartphone size={16} className="text-primary" />
+            <span className="flex-1 text-sm font-semibold">iPhone setup</span>
+            <ChevronRight size={16} className="text-muted-foreground" />
+          </Link>
           {["Bank account", "Mobile banking", "Nita", "Amana"].map((label) => (
             <div key={label} className="flex items-center gap-3">
               {label === "Bank account" ? (
@@ -193,6 +207,7 @@ function ProfilePage() {
           ))}
         </div>
       </Card>
+
 
       <Card className="space-y-3">
         <Chip className="inline-flex items-center gap-2" onClick={exportData}>
