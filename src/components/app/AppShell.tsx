@@ -14,16 +14,18 @@ import { cn } from "@/lib/utils";
 import { GlassIconButton } from "./primitives";
 import { useProfile } from "@/lib/data";
 import { useDetectedTransactions } from "@/lib/detection";
+import { useT, type TKey } from "@/lib/i18n";
 
 const TABS = [
-  { to: "/home", label: "Home", icon: Home },
-  { to: "/transactions", label: "Records", icon: ListOrdered },
-  { to: "/goals", label: "Goals", icon: Target },
-  { to: "/budget", label: "Budget", icon: PieChart },
-  { to: "/profile", label: "Profile", icon: User },
+  { to: "/home", labelKey: "nav.home", icon: Home },
+  { to: "/transactions", labelKey: "nav.records", icon: ListOrdered },
+  { to: "/goals", labelKey: "nav.goals", icon: Target },
+  { to: "/budget", labelKey: "nav.budget", icon: PieChart },
+  { to: "/profile", labelKey: "nav.profile", icon: User },
 ] as const;
 
 export function TopBar({ title }: { title: string }) {
+  const t = useT();
   const { data: profile } = useProfile();
   const { data: detections = [] } = useDetectedTransactions();
   const navigate = useNavigate();
@@ -38,14 +40,14 @@ export function TopBar({ title }: { title: string }) {
         </div>
         <div className="flex shrink-0 items-center gap-1">
           <GlassIconButton
-            label="Search transactions"
+            label={t("nav.searchTransactions")}
             onClick={() => navigate({ to: "/transactions" })}
           >
             <Search size={17} />
           </GlassIconButton>
           <div className="relative">
             <GlassIconButton
-              label="Detected transactions"
+              label={t("nav.detectedTransactions")}
               onClick={() => navigate({ to: "/detections" })}
             >
               <Bell size={17} />
@@ -59,7 +61,7 @@ export function TopBar({ title }: { title: string }) {
 
           <Link
             to="/profile"
-            aria-label="Profile"
+            aria-label={t("nav.profile")}
             className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full bg-surface text-sm font-bold"
           >
             {profile?.avatar_url ? (
@@ -79,6 +81,7 @@ export function TopBar({ title }: { title: string }) {
 }
 
 export function BottomNav() {
+  const t = useT();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg px-3 pb-3">
       <div className="glass-button flex items-center justify-between rounded-3xl px-2 py-2">
@@ -90,7 +93,7 @@ export function BottomNav() {
             activeProps={{ className: "text-primary" }}
           >
             <tab.icon size={19} strokeWidth={2.2} />
-            {tab.label}
+            {t(tab.labelKey as TKey)}
           </Link>
         ))}
       </div>
@@ -126,11 +129,12 @@ export function PageShell({
   onBack?: () => void;
 }) {
   const navigate = useNavigate();
+  const t = useT();
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg bg-background">
       <header className="sticky top-0 z-30 flex items-center gap-3 px-4 pt-4 pb-2">
         <GlassIconButton
-          label="Go back"
+          label={t("common.goBack")}
           onClick={() => (onBack ? onBack() : navigate({ to: "/home" }))}
         >
           <Wallet size={17} className="hidden" />
