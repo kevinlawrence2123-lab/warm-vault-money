@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app/AppShell";
 import { Card, EmptyState, IconBubble, ProgressBar } from "@/components/app/primitives";
 import { formatMoney, monthKey, monthLabel } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import {
   useBudgets,
   useCategories,
@@ -38,6 +39,7 @@ const PALETTE = [
 ];
 
 function BudgetPage() {
+  const t = useT();
   const currency = useCurrency();
   const invalidate = useInvalidateAll();
   const [offset, setOffset] = useState(0);
@@ -98,13 +100,13 @@ function BudgetPage() {
   }
 
   return (
-    <AppShell title="Budget">
+    <AppShell title={t("budget.title")}>
       <Card className="flex items-center justify-between">
-        <button type="button" aria-label="Previous month" onClick={() => setOffset((o) => o - 1)}>
+        <button type="button" aria-label={t("budget.prevMonth")} onClick={() => setOffset((o) => o - 1)}>
           <ChevronLeft size={20} className="text-muted-foreground" />
         </button>
         <p className="font-bold">{monthLabel(refDate)}</p>
-        <button type="button" aria-label="Next month" onClick={() => setOffset((o) => o + 1)}>
+        <button type="button" aria-label={t("budget.nextMonth")} onClick={() => setOffset((o) => o + 1)}>
           <ChevronRight size={20} className="text-muted-foreground" />
         </button>
       </Card>
@@ -113,17 +115,17 @@ function BudgetPage() {
         <Card className="flex items-start gap-3 border border-destructive/40">
           <AlertTriangle size={18} className="mt-0.5 shrink-0 text-destructive" />
           <p className="text-sm">
-            <span className="font-bold">Heads up.</span>{" "}
+            <span className="font-bold">{t("budget.headsUp")}</span>{" "}
             {overCategories.map((c) => c.name).join(", ")}{" "}
-            {overCategories.length > 1 ? "are" : "is"} at or over the limit this month.
+            {overCategories.length > 1 ? t("budget.atLimitMany") : t("budget.atLimitOne")}
           </p>
         </Card>
       )}
 
       <Card className="space-y-3">
-        <p className="font-bold">Spending by category</p>
+        <p className="font-bold">{t("budget.byCategory")}</p>
         {donut.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No expenses recorded this month.</p>
+          <p className="text-sm text-muted-foreground">{t("budget.noExpenses")}</p>
         ) : (
           <div className="relative h-56">
             <ResponsiveContainer width="100%" height="100%">
@@ -154,7 +156,7 @@ function BudgetPage() {
             </ResponsiveContainer>
             <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <div className="text-center">
-                <p className="text-xs text-muted-foreground">Spent</p>
+                <p className="text-xs text-muted-foreground">{t("budget.spent")}</p>
                 <p className="amount-xl text-xl">{formatMoney(totalSpent, currency)}</p>
               </div>
             </div>
@@ -163,7 +165,7 @@ function BudgetPage() {
       </Card>
 
       {expenseCats.length === 0 ? (
-        <EmptyState title="No expense categories yet" />
+        <EmptyState title={t("budget.noCategories")} />
       ) : (
         <div className="space-y-3">
           {expenseCats.map((c) => {
@@ -179,7 +181,7 @@ function BudgetPage() {
                   <input
                     inputMode="decimal"
                     defaultValue={limit || ""}
-                    placeholder="Set limit"
+                    placeholder={t("budget.setLimit")}
                     onBlur={(e) => {
                       const v = Number(e.target.value.replace(/[^0-9.]/g, ""));
                       if (v !== limit) void setLimit(c.id, v);
@@ -190,7 +192,9 @@ function BudgetPage() {
                 <ProgressBar value={limit > 0 ? pct : 0} tone={limit > 0 ? tone : "muted"} />
                 <p className="text-xs text-muted-foreground">
                   {formatMoney(spent, currency)}
-                  {limit > 0 ? ` of ${formatMoney(limit, currency)}` : " spent · no limit set"}
+                  {limit > 0
+                    ? ` ${t("common.of")} ${formatMoney(limit, currency)}`
+                    : ` ${t("budget.noLimit")}`}
                 </p>
               </Card>
             );

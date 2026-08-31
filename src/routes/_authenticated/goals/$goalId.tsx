@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageShell } from "@/components/app/AppShell";
 import { Card, Chip, EmptyState, IconBubble } from "@/components/app/primitives";
 import { daysUntil, formatMoney } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import {
   useContributions,
   useCurrency,
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_authenticated/goals/$goalId")({
 });
 
 function GoalDetail() {
+  const t = useT();
   const { goalId } = useParams({ from: "/_authenticated/goals/$goalId" });
   const currency = useCurrency();
   const invalidate = useInvalidateAll();
@@ -45,8 +47,8 @@ function GoalDetail() {
 
   if (!goal) {
     return (
-      <PageShell title="Goal">
-        {!isLoading && <EmptyState title="Goal not found" />}
+      <PageShell title={t("goals.detail")}>
+        {!isLoading && <EmptyState title={t("goals.notFound")} />}
       </PageShell>
     );
   }
@@ -60,7 +62,7 @@ function GoalDetail() {
   async function addFunds() {
     const value = Number(amount);
     if (!goal || !value || value <= 0) {
-      toast.error("Enter an amount");
+      toast.error(t("goals.enterAmount"));
       return;
     }
     setBusy(true);
@@ -84,7 +86,7 @@ function GoalDetail() {
     }
     setAmount("");
     invalidate();
-    toast.success("Contribution added");
+    toast.success(t("goals.contributionAdded"));
   }
 
   async function removeGoal() {
@@ -109,9 +111,9 @@ function GoalDetail() {
         <Card className="flex items-center gap-3">
           <IconBubble icon="party" active />
           <div>
-            <p className="font-bold">Goal reached!</p>
+            <p className="font-bold">{t("goals.reached")}</p>
             <p className="text-xs text-muted-foreground">
-              You saved {formatMoney(goal.current_amount, currency)}.
+              {t("goals.youSaved", { amount: formatMoney(goal.current_amount, currency) })}
             </p>
           </div>
           <PartyPopper className="ml-auto text-primary" size={22} />
@@ -147,13 +149,13 @@ function GoalDetail() {
         </div>
         <p className="amount-xl text-2xl">{formatMoney(goal.current_amount, currency)}</p>
         <p className="text-sm text-muted-foreground">
-          of {formatMoney(goal.target_amount, currency)}
-          {days !== null && ` · ${days} days left`}
+          {t("common.of")} {formatMoney(goal.target_amount, currency)}
+          {days !== null && ` · ${t("goals.daysLeft", { n: days })}`}
         </p>
       </Card>
 
       <Card className="space-y-3">
-        <p className="font-bold">Add funds</p>
+        <p className="font-bold">{t("goals.addFunds")}</p>
         <div className="flex gap-2">
           <input
             value={amount}
@@ -168,15 +170,15 @@ function GoalDetail() {
             disabled={busy}
             className="gold-gradient shrink-0 rounded-full px-6 font-bold text-primary-foreground disabled:opacity-60"
           >
-            Add
+            {t("common.add")}
           </button>
         </div>
       </Card>
 
       <Card className="space-y-3">
-        <p className="font-bold">Contribution history</p>
+        <p className="font-bold">{t("goals.history")}</p>
         {chartData.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No contributions yet.</p>
+          <p className="text-sm text-muted-foreground">{t("goals.noContributions")}</p>
         ) : (
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
@@ -205,7 +207,7 @@ function GoalDetail() {
       </Card>
 
       <Chip className="inline-flex items-center gap-2 text-destructive" onClick={removeGoal}>
-        <Trash2 size={14} /> Delete goal
+        <Trash2 size={14} /> {t("goals.deleteGoal")}
       </Chip>
     </PageShell>
   );
