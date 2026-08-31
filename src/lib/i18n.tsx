@@ -556,6 +556,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const { data: profile } = useProfile();
   const [lang, setLangState] = useState<Lang>("en");
 
+  // Keep formatters in sync during render so amounts/dates never lag a frame.
+  setActiveLanguage(lang);
+
   // Restore last choice before the profile loads (avoids a flash of English).
   useEffect(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
