@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/lib/data";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/auth")({
 });
 
 function AuthPage() {
+  const t = useT();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -51,7 +53,7 @@ function AuthPage() {
         });
         if (error) throw error;
         if (!data.session) {
-          toast.success("Check your email to confirm your account.");
+          toast.success(t("auth.checkEmail"));
           return;
         }
         navigate({ to: "/onboarding" });
@@ -61,7 +63,7 @@ function AuthPage() {
         navigate({ to: "/home" });
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong");
+      toast.error(err instanceof Error ? err.message : t("common.somethingWrong"));
     } finally {
       setBusy(false);
     }
@@ -75,19 +77,17 @@ function AuthPage() {
           <span className="text-sm font-bold tracking-[0.2em] uppercase">MyBudget</span>
         </div>
         <h1 className="amount-xl text-4xl">
-          {mode === "login" ? "Welcome back" : "Create account"}
+          {mode === "login" ? t("auth.welcomeBack") : t("auth.createAccount")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {mode === "login"
-            ? "Sign in to pick up where you left off."
-            : "A minute to set up, a lifetime of clarity."}
+          {mode === "login" ? t("auth.subtitleLogin") : t("auth.subtitleSignup")}
         </p>
       </div>
 
       <form onSubmit={submit} className="space-y-3">
         {mode === "signup" && (
           <Field
-            label="Full name"
+            label={t("auth.fullName")}
             value={name}
             onChange={setName}
             type="text"
@@ -95,7 +95,7 @@ function AuthPage() {
           />
         )}
         <Field
-          label="Email"
+          label={t("auth.email")}
           value={email}
           onChange={setEmail}
           type="email"
@@ -103,7 +103,7 @@ function AuthPage() {
           required
         />
         <Field
-          label="Password"
+          label={t("auth.password")}
           value={password}
           onChange={setPassword}
           type="password"
@@ -117,7 +117,7 @@ function AuthPage() {
           className="gold-gradient flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-primary-foreground disabled:opacity-60"
         >
           {busy && <Loader2 size={16} className="animate-spin" />}
-          {mode === "login" ? "Sign in" : "Create account"}
+          {mode === "login" ? t("auth.signIn") : t("auth.createAccount")}
         </button>
       </form>
 
@@ -128,11 +128,13 @@ function AuthPage() {
       >
         {mode === "login" ? (
           <>
-            New here? <span className="font-semibold text-primary">Create an account</span>
+            {t("auth.newHere")}{" "}
+            <span className="font-semibold text-primary">{t("auth.createOne")}</span>
           </>
         ) : (
           <>
-            Already have an account? <span className="font-semibold text-primary">Sign in</span>
+            {t("auth.haveAccount")}{" "}
+            <span className="font-semibold text-primary">{t("auth.signIn")}</span>
           </>
         )}
       </button>
