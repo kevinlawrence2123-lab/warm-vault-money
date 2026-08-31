@@ -3,6 +3,7 @@ import { PageShell } from "@/components/app/AppShell";
 import { TransactionForm } from "@/components/app/TransactionForm";
 import { EmptyState } from "@/components/app/primitives";
 import { useTransactions } from "@/lib/data";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/transactions/$transactionId")({
   head: () => ({
@@ -17,16 +18,17 @@ export const Route = createFileRoute("/_authenticated/transactions/$transactionI
 });
 
 function EditTransaction() {
+  const t = useT();
   const { transactionId } = useParams({ from: "/_authenticated/transactions/$transactionId" });
   const { data: transactions = [], isLoading } = useTransactions();
   const transaction = transactions.find((t) => t.id === transactionId);
 
   return (
-    <PageShell title="Edit transaction">
+    <PageShell title={t("tx.edit")}>
       {transaction ? (
         <TransactionForm existing={transaction} />
       ) : (
-        !isLoading && <EmptyState title="Transaction not found" />
+        !isLoading && <EmptyState title={t("tx.notFound")} />
       )}
     </PageShell>
   );

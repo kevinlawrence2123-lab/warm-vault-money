@@ -5,6 +5,7 @@ import { AppShell } from "@/components/app/AppShell";
 import { Card, Chip, EmptyState } from "@/components/app/primitives";
 import { TransactionRow } from "@/components/app/TransactionRow";
 import { dayLabel, formatMoney } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import {
   inMonth,
   useCategories,
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/_authenticated/transactions/")({
 });
 
 function TransactionsPage() {
+  const t = useT();
   const currency = useCurrency();
   const { data: transactions = [] } = useTransactions();
   const { data: categories = [] } = useCategories();
@@ -35,7 +37,7 @@ function TransactionsPage() {
   const [to, setTo] = useState("");
 
   const catName = (id: string | null) =>
-    categories.find((c) => c.id === id)?.name ?? "Uncategorised";
+    categories.find((c) => c.id === id)?.name ?? t("common.uncategorised");
 
   const filtered = useMemo(
     () =>
@@ -88,14 +90,14 @@ function TransactionsPage() {
   }
 
   return (
-    <AppShell title="Transactions">
+    <AppShell title={t("tx.title")}>
       <Card className="space-y-3">
         <div className="flex items-center gap-2 rounded-full bg-surface px-4 py-2.5">
           <Search size={16} className="shrink-0 text-muted-foreground" />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search notes and categories"
+            placeholder={t("tx.searchPlaceholder")}
             className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -115,7 +117,7 @@ function TransactionsPage() {
         </div>
         <div className="no-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1">
           <Chip active={!categoryId} onClick={() => setCategoryId(null)}>
-            All
+            {t("common.all")}
           </Chip>
           {categories.map((c) => (
             <Chip
@@ -131,7 +133,7 @@ function TransactionsPage() {
 
       <Card className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-muted-foreground">This month net</p>
+          <p className="text-xs text-muted-foreground">{t("tx.monthNet")}</p>
           <p className="amount-xl text-2xl">{formatMoney(monthTotal, currency)}</p>
         </div>
         <Chip className="inline-flex items-center gap-1.5" onClick={exportCsv}>
@@ -141,8 +143,8 @@ function TransactionsPage() {
 
       {groups.length === 0 ? (
         <EmptyState
-          title="No transactions yet"
-          description="Add your first expense or income to start tracking."
+          title={t("tx.none")}
+          description={t("tx.noneDesc")}
         />
       ) : (
         <div className="space-y-5">
@@ -168,7 +170,7 @@ function TransactionsPage() {
 
       <Link
         to="/transactions/new"
-        aria-label="Add transaction"
+        aria-label={t("tx.add")}
         className="gold-gradient fixed right-5 bottom-28 z-40 grid h-14 w-14 place-items-center rounded-full text-primary-foreground shadow-lg"
       >
         <Plus size={24} strokeWidth={2.6} />
