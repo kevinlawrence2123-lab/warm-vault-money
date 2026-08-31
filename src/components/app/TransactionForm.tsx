@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, Chip, IconBubble } from "./primitives";
 import { PAYMENT_METHODS } from "@/lib/icons";
+import { DEFAULT_CURRENCY } from "@/lib/format";
+import { useT, type TKey } from "@/lib/i18n";
 import {
   useAccounts,
   useCategories,
@@ -29,6 +31,7 @@ export function TransactionForm({
   prefill?: TransactionPrefill | undefined;
 }) {
   const navigate = useNavigate();
+  const t = useT();
   const invalidate = useInvalidateAll();
   const { data: profile } = useProfile();
   const { data: categories = [] } = useCategories();
@@ -49,7 +52,7 @@ export function TransactionForm({
 
   const [busy, setBusy] = useState(false);
 
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? DEFAULT_CURRENCY;
   const visibleCategories = categories.filter((c) => c.type === type);
 
   const prefillAccount = prefill?.accountName?.toLowerCase();
@@ -71,13 +74,13 @@ export function TransactionForm({
       return;
     }
     setReceiptUrl(path);
-    toast.success("Receipt attached");
+    toast.success(t("tx.receiptAttached"));
   }
 
   async function save() {
     const value = Number(amount);
     if (!value || value <= 0) {
-      toast.error("Enter an amount greater than zero");
+      toast.error(t("tx.enterAmount"));
       return;
     }
     setBusy(true);
@@ -106,10 +109,10 @@ export function TransactionForm({
       }
       invalidate();
 
-      toast.success(existing ? "Transaction updated" : "Transaction saved");
+      toast.success(existing ? t("tx.updated") : t("tx.savedOk"));
       navigate({ to: "/transactions" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save");
+      toast.error(err instanceof Error ? err.message : t("common.couldNotSave"));
     } finally {
       setBusy(false);
     }
@@ -131,19 +134,19 @@ export function TransactionForm({
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-2 rounded-full bg-card p-1.5">
-        {(["expense", "income"] as const).map((t) => (
+        {(["expense", "income"] as const).map((tab) => (
           <button
-            key={t}
+            key={tab}
             type="button"
             onClick={() => {
-              setType(t);
+              setType(tab);
               setCategoryId(null);
             }}
-            className={`rounded-full py-2.5 text-sm font-bold capitalize transition-colors ${
-              type === t ? "gold-gradient text-primary-foreground" : "text-muted-foreground"
+            className={`rounded-full py-2.5 text-sm font-bold transition-colors ${
+              type === tab ? "gold-gradient text-primary-foreground" : "text-muted-foreground"
             }`}
           >
-            {t}
+            {t(tab === "income" ? "tx.income" : "tx.expense")}
           </button>
         ))}
       </div>
@@ -162,7 +165,7 @@ export function TransactionForm({
       </div>
 
       <section>
-        <p className="mb-2 text-sm font-bold">Category</p>
+        <p className="mb-2 text-sm font-bold">{t("tx.category")}</p>
         <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
           {visibleCategories.map((c) => (
             <button
@@ -181,7 +184,7 @@ export function TransactionForm({
       </section>
 
       <Card className="space-y-4">
-        <Row label="Date">
+        <Row label={t("tx.date")}>
           <input
             type="date"
             value={date}
@@ -189,13 +192,13 @@ export function TransactionForm({
             className="bg-transparent text-sm font-semibold outline-none"
           />
         </Row>
-        <Row label="Account">
+        <Row label={t("tx.account")}>
           <select
             value={accountId ?? ""}
             onChange={(e) => setAccountId(e.target.value || null)}
             className="bg-transparent text-sm font-semibold outline-none"
           >
-            <option value="">None</option>
+            <option value="">{t("common.none")}</option>
             {accounts.map((a) => (
               <option key={a.id} value={a.id} className="bg-card">
                 {a.name}
@@ -203,7 +206,7 @@ export function TransactionForm({
             ))}
           </select>
         </Row>
-        <Row label="Payment method">
+        <Row label={t("tx.paymentMethod")}>
           <select
             value={method}
             onChange={(e) => setMethod(e.target.value)}
@@ -211,7 +214,7 @@ export function TransactionForm({
           >
             {PAYMENT_METHODS.map((m) => (
               <option key={m.value} value={m.value} className="bg-card">
-                {m.label}
+                {t(`method.${m.value}` as TKey)}
               </option>
             ))}
           </select>
@@ -222,7 +225,7 @@ export function TransactionForm({
         <textarea
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Add a note…"
+          placeholder={t("tx.notePlaceholder")}
           rows={2}
           className="w-full resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />
@@ -230,7 +233,7 @@ export function TransactionForm({
           <label className="cursor-pointer">
             <Chip className="inline-flex items-center gap-1.5" active={!!receiptUrl}>
               <Camera size={14} />
-              {receiptUrl ? "Receipt attached" : "Receipt"}
+              {receiptUrl ? t("tx.receiptAttached") : t("tx.receipt")}
             </Chip>
             <input
               type="file"
@@ -252,7 +255,7 @@ export function TransactionForm({
         className="gold-gradient flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-primary-foreground disabled:opacity-60"
       >
         {busy ? <Loader2 size={17} className="animate-spin" /> : <Check size={17} />}
-        {existing ? "Update transaction" : "Save transaction"}
+        {existing ? t("tx.update") : t("tx.saveBtn")}
       </button>
 
       {existing && (
@@ -261,7 +264,7 @@ export function TransactionForm({
           onClick={remove}
           className="flex w-full items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold text-destructive"
         >
-          <Trash2 size={15} /> Delete transaction
+          <Trash2 size={15} /> {t("tx.delete")}
         </button>
       )}
     </div>

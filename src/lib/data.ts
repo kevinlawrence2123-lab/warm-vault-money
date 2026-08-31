@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { DEFAULT_CURRENCY } from "./format";
 
 export interface Profile {
   id: string;
@@ -110,7 +111,7 @@ export function useProfile() {
 
 export function useCurrency() {
   const { data } = useProfile();
-  return data?.currency ?? "USD";
+  return data?.currency ?? DEFAULT_CURRENCY;
 }
 
 export function useAccounts() {

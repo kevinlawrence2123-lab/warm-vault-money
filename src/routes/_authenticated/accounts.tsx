@@ -7,6 +7,7 @@ import { PageShell } from "@/components/app/AppShell";
 import { Card, Chip, IconBubble } from "@/components/app/primitives";
 import { formatMoney } from "@/lib/format";
 import { ACCOUNT_TYPES } from "@/lib/icons";
+import { useT, type TKey } from "@/lib/i18n";
 import {
   accountBalance,
   useAccounts,
@@ -28,6 +29,7 @@ export const Route = createFileRoute("/_authenticated/accounts")({
 });
 
 function AccountsPage() {
+  const t = useT();
   const currency = useCurrency();
   const invalidate = useInvalidateAll();
   const { data: accounts = [] } = useAccounts();
@@ -39,7 +41,7 @@ function AccountsPage() {
 
   async function create() {
     if (!name) {
-      toast.error("Give the account a name");
+      toast.error(t("accounts.needName"));
       return;
     }
     const { data: userData } = await supabase.auth.getUser();
@@ -69,15 +71,15 @@ function AccountsPage() {
   }
 
   return (
-    <PageShell title="Accounts">
+    <PageShell title={t("accounts.title")}>
       <div className="space-y-3">
         {accounts.map((a) => (
           <Card key={a.id} className="flex items-center gap-3">
             <IconBubble icon={a.type} />
             <div className="min-w-0 flex-1">
               <p className="truncate font-bold">{a.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">
-                {a.type.replace("_", " ")}
+              <p className="text-xs text-muted-foreground">
+                {t(`accounts.type.${a.type}` as TKey)}
               </p>
             </div>
             <p className="amount-xl text-lg">
@@ -95,20 +97,20 @@ function AccountsPage() {
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Account name"
+            placeholder={t("accounts.namePlaceholder")}
             className="w-full bg-transparent font-semibold outline-none placeholder:text-muted-foreground"
           />
           <input
             value={balance}
             inputMode="decimal"
             onChange={(e) => setBalance(e.target.value.replace(/[^0-9.-]/g, ""))}
-            placeholder="Starting balance"
+            placeholder={t("accounts.startingBalance")}
             className="w-full bg-transparent font-semibold outline-none placeholder:text-muted-foreground"
           />
           <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
-            {ACCOUNT_TYPES.map((t) => (
-              <Chip key={t.value} active={type === t.value} onClick={() => setType(t.value)}>
-                {t.label}
+            {ACCOUNT_TYPES.map((a) => (
+              <Chip key={a.value} active={type === a.value} onClick={() => setType(a.value)}>
+                {t(`accounts.type.${a.value}` as TKey)}
               </Chip>
             ))}
           </div>
@@ -118,25 +120,24 @@ function AccountsPage() {
               onClick={create}
               className="gold-gradient flex-1 rounded-full py-3 font-bold text-primary-foreground"
             >
-              Add account
+              {t("accounts.add")}
             </button>
-            <Chip onClick={() => setOpen(false)}>Cancel</Chip>
+            <Chip onClick={() => setOpen(false)}>{t("common.cancel")}</Chip>
           </div>
         </Card>
       ) : (
         <Chip className="inline-flex items-center gap-2" active onClick={() => setOpen(true)}>
-          <Plus size={15} /> Add account
+          <Plus size={15} /> {t("accounts.add")}
         </Chip>
       )}
 
       <Card className="space-y-2 opacity-70">
         <div className="flex items-center gap-2">
           <Landmark size={16} className="text-muted-foreground" />
-          <p className="font-bold">Automatic sync</p>
+          <p className="font-bold">{t("accounts.autoSync")}</p>
         </div>
         <p className="text-sm text-muted-foreground">
-          Bank, mobile banking and mobile money sync (Nita, Amana) is coming in a future
-          phase. For now, add and update your accounts manually.
+          {t("accounts.autoSyncText")}
         </p>
       </Card>
     </PageShell>

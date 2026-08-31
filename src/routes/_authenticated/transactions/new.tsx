@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell } from "@/components/app/AppShell";
 import { TransactionForm } from "@/components/app/TransactionForm";
+import { useT } from "@/lib/i18n";
 
 interface QuickAddSearch {
   amount?: string;
@@ -35,14 +36,15 @@ export const Route = createFileRoute("/_authenticated/transactions/new")({
 });
 
 function NewTransaction() {
+  const t = useT();
   const search = Route.useSearch();
   const prefilled = Boolean(search.amount || search.note || search.account);
 
   return (
-    <PageShell title={prefilled ? "Confirm transaction" : "Add transaction"}>
+    <PageShell title={prefilled ? t("tx.confirmTitle") : t("tx.add")}>
       {prefilled && (
         <p className="rounded-2xl bg-surface px-4 py-3 text-xs text-muted-foreground">
-          Pre-filled from a quick-add link. Review the details, pick a category, then save.
+          {t("tx.prefilledHint")}
         </p>
       )}
       <TransactionForm

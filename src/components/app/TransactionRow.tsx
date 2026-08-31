@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { IconBubble } from "./primitives";
-import { formatMoney } from "@/lib/format";
+import { formatMoney, shortDate } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import type { Category, Transaction } from "@/lib/data";
 
 export function TransactionRow({
@@ -12,6 +13,7 @@ export function TransactionRow({
   category?: Category | undefined;
   currency: string;
 }) {
+  const t = useT();
   const isIncome = tx.type === "income";
   return (
     <Link
@@ -22,14 +24,10 @@ export function TransactionRow({
       <IconBubble icon={category?.icon} color={category?.color} size="sm" />
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold">
-          {tx.note?.trim() || category?.name || "Transaction"}
+          {tx.note?.trim() || category?.name || t("common.transaction")}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          {category?.name ?? "Uncategorised"} ·{" "}
-          {new Date(`${tx.date}T00:00:00`).toLocaleDateString("en-US", {
-            day: "numeric",
-            month: "short",
-          })}
+          {category?.name ?? t("common.uncategorised")} · {shortDate(tx.date)}
         </p>
       </div>
       <span

@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app/AppShell";
 import { Card, Chip, EmptyState, IconBubble, ProgressBar } from "@/components/app/primitives";
 import { formatMoney, daysUntil } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { GOAL_ICON_CHOICES } from "@/lib/icons";
 import { useCurrency, useGoals, useInvalidateAll } from "@/lib/data";
 
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/goals/")({
 });
 
 function GoalsPage() {
+  const t = useT();
   const currency = useCurrency();
   const invalidate = useInvalidateAll();
   const { data: goals = [] } = useGoals();
@@ -34,7 +36,7 @@ function GoalsPage() {
 
   async function create() {
     if (!name || Number(target) <= 0) {
-      toast.error("Add a name and a target amount");
+      toast.error(t("goals.needNameTarget"));
       return;
     }
     setBusy(true);
@@ -56,28 +58,28 @@ function GoalsPage() {
     setName("");
     setTarget("");
     setDate("");
-    toast.success("Goal created");
+    toast.success(t("goals.created"));
   }
 
   return (
-    <AppShell title="Goals">
+    <AppShell title={t("goals.title")}>
       {open && (
         <Card className="space-y-4">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Goal name"
+            placeholder={t("goals.namePlaceholder")}
             className="w-full bg-transparent font-semibold outline-none placeholder:text-muted-foreground"
           />
           <input
             value={target}
             inputMode="decimal"
             onChange={(e) => setTarget(e.target.value.replace(/[^0-9.]/g, ""))}
-            placeholder="Target amount"
+            placeholder={t("goals.targetAmount")}
             className="w-full bg-transparent font-semibold outline-none placeholder:text-muted-foreground"
           />
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Target date</span>
+            <span className="text-sm text-muted-foreground">{t("goals.targetDate")}</span>
             <input
               type="date"
               value={date}
@@ -99,18 +101,18 @@ function GoalsPage() {
               disabled={busy}
               className="gold-gradient flex flex-1 items-center justify-center gap-2 rounded-full py-3 font-bold text-primary-foreground disabled:opacity-60"
             >
-              {busy && <Loader2 size={15} className="animate-spin" />} Create goal
+              {busy && <Loader2 size={15} className="animate-spin" />} {t("goals.create")}
             </button>
-            <Chip onClick={() => setOpen(false)}>Cancel</Chip>
+            <Chip onClick={() => setOpen(false)}>{t("common.cancel")}</Chip>
           </div>
         </Card>
       )}
 
       {goals.length === 0 && !open ? (
         <EmptyState
-          title="No savings goals yet"
-          description="Create a goal and track every contribution towards it."
-          action={<Chip active onClick={() => setOpen(true)}>Create a goal</Chip>}
+          title={t("goals.none")}
+          description={t("goals.noneDesc")}
+          action={<Chip active onClick={() => setOpen(true)}>{t("goals.createOne")}</Chip>}
         />
       ) : (
         <div className="space-y-3">
@@ -126,17 +128,17 @@ function GoalsPage() {
                       <p className="truncate font-bold">{g.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {g.status === "completed"
-                          ? "Completed 🎉"
+                          ? t("goals.completed")
                           : days !== null
-                            ? `${days} days left`
-                            : "No deadline"}
+                            ? t("goals.daysLeft", { n: days })
+                            : t("goals.noDeadline")}
                       </p>
                     </div>
                     <p className="text-sm font-bold text-primary">{Math.round(pct)}%</p>
                   </div>
                   <ProgressBar value={pct} tone={g.status === "completed" ? "gold" : "gold"} />
                   <p className="text-xs text-muted-foreground">
-                    {formatMoney(g.current_amount, currency)} of{" "}
+                    {formatMoney(g.current_amount, currency)} {t("common.of")}{" "}
                     {formatMoney(g.target_amount, currency)}
                   </p>
                 </Card>
@@ -148,7 +150,7 @@ function GoalsPage() {
 
       <button
         type="button"
-        aria-label="New goal"
+        aria-label={t("goals.newGoal")}
         onClick={() => setOpen((v) => !v)}
         className="gold-gradient fixed right-5 bottom-28 z-40 grid h-14 w-14 place-items-center rounded-full text-primary-foreground shadow-lg"
       >

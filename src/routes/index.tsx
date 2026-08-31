@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { ArrowRight, PieChart, Target, Wallet } from "lucide-react";
 import { useSession } from "@/lib/data";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const t = useT();
   const { session, loading } = useSession();
   const navigate = useNavigate();
 
@@ -41,21 +43,20 @@ function Landing() {
 
         <div className="space-y-4">
           <h1 className="amount-xl text-5xl">
-            Every franc,
+            {t("landing.tagline1")}
             <br />
-            <span className="text-primary">accounted for.</span>
+            <span className="text-primary">{t("landing.tagline2")}</span>
           </h1>
           <p className="text-base text-muted-foreground">
-            One calm place for your expenses, income, monthly budgets and savings
-            goals — instead of scattered notes and five banking apps.
+            {t("landing.intro")}
           </p>
         </div>
 
         <div className="grid gap-3">
           {[
-            { icon: Wallet, title: "Track everything", text: "Expenses and income across all your accounts." },
-            { icon: PieChart, title: "Stay on budget", text: "Monthly limits per category with clear alerts." },
-            { icon: Target, title: "Reach your goals", text: "Savings goals with progress and contributions." },
+            { icon: Wallet, title: t("landing.f1.title"), text: t("landing.f1.text") },
+            { icon: PieChart, title: t("landing.f2.title"), text: t("landing.f2.text") },
+            { icon: Target, title: t("landing.f3.title"), text: t("landing.f3.text") },
           ].map((f) => (
             <div key={f.title} className="surface-card flex items-start gap-3 p-4">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface text-primary">
@@ -74,7 +75,7 @@ function Landing() {
         to="/auth"
         className="gold-gradient mt-10 flex items-center justify-center gap-2 rounded-full py-4 text-base font-bold text-primary-foreground"
       >
-        Get started <ArrowRight size={18} />
+        {t("landing.cta")} <ArrowRight size={18} />
       </Link>
     </div>
   );

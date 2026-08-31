@@ -26,7 +26,8 @@ import {
   useTransactions,
   type Range,
 } from "@/lib/data";
-import { formatMoney } from "@/lib/format";
+import { DEFAULT_CURRENCY, formatMoney } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -43,6 +44,7 @@ export const Route = createFileRoute("/_authenticated/home")({
 const RANGES: Range[] = ["1D", "1W", "1M", "3M", "1Y"];
 
 function HomePage() {
+  const t = useT();
   const [range, setRange] = useState<Range>("1M");
   const { data: profile } = useProfile();
   const { data: accounts = [] } = useAccounts();
@@ -50,7 +52,7 @@ function HomePage() {
   const { data: goals = [] } = useGoals();
   const { data: categories = [] } = useCategories();
   const navigate = useNavigate();
-  const currency = profile?.currency ?? "USD";
+  const currency = profile?.currency ?? DEFAULT_CURRENCY;
 
   useEffect(() => {
     if (profile && !profile.onboarded) navigate({ to: "/onboarding", replace: true });
@@ -65,11 +67,11 @@ function HomePage() {
   const series = balanceSeries(accounts, txs, range);
 
   return (
-    <AppShell title="Dashboard">
+    <AppShell title={t("home.title")}>
       <Card className="relative overflow-hidden p-0" wavy>
         <div className="px-6 pt-6">
           <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
-            Total balance
+            {t("home.totalBalance")}
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-3">
             <Amount
@@ -84,7 +86,7 @@ function HomePage() {
               }`}
             >
               {change >= 0 ? <ArrowUpRight size={13} /> : <ArrowDownRight size={13} />}
-              {formatMoney(Math.abs(change), currency, true)} this month
+              {formatMoney(Math.abs(change), currency, true)} {t("home.thisMonth")}
             </span>
           </div>
         </div>
@@ -107,7 +109,7 @@ function HomePage() {
                   fontSize: 12,
                 }}
                 labelStyle={{ color: "var(--color-muted-foreground)" }}
-                formatter={(v: number) => [formatMoney(v, currency), "Balance"]}
+                formatter={(v: number) => [formatMoney(v, currency), t("home.balance")]}
               />
               <Area
                 type="monotone"
@@ -135,29 +137,29 @@ function HomePage() {
       </Card>
 
       <div className="grid grid-cols-2 gap-3">
-        <StatCard label="Spent this month" value={spent} currency={currency} tone="gold" />
-        <StatCard label="Saved this month" value={saved} currency={currency} />
+        <StatCard label={t("home.spentThisMonth")} value={spent} currency={currency} tone="gold" />
+        <StatCard label={t("home.savedThisMonth")} value={saved} currency={currency} />
       </div>
 
       <section>
         <SectionHeader
-          title="Savings goals"
+          title={t("home.savingsGoals")}
           action={
             <Link to="/goals" className="text-sm font-semibold text-primary">
-              See all
+              {t("common.seeAll")}
             </Link>
           }
         />
         {goals.length === 0 ? (
           <EmptyState
-            title="No goals yet"
-            description="Set your first savings goal and watch it grow."
+            title={t("home.noGoals")}
+            description={t("home.noGoalsDesc")}
             action={
               <Link
                 to="/goals"
                 className="gold-gradient inline-block rounded-full px-5 py-2.5 text-sm font-bold text-primary-foreground"
               >
-                Create a goal
+                {t("home.createGoal")}
               </Link>
             }
           />
@@ -194,17 +196,17 @@ function HomePage() {
 
       <section>
         <SectionHeader
-          title="Recent activity"
+          title={t("home.recentActivity")}
           action={
             <Link to="/transactions" className="text-sm font-semibold text-primary">
-              View all
+              {t("common.viewAll")}
             </Link>
           }
         />
         {txs.length === 0 ? (
           <EmptyState
-            title="Nothing recorded yet"
-            description="Add your first transaction to get started."
+            title={t("home.nothingYet")}
+            description={t("home.nothingYetDesc")}
           />
         ) : (
           <div className="surface-card divide-y divide-border p-2">
@@ -222,7 +224,7 @@ function HomePage() {
 
       <Link
         to="/transactions/new"
-        aria-label="Add transaction"
+        aria-label={t("home.addTransaction")}
         className="gold-gradient fixed right-5 bottom-24 z-40 grid h-14 w-14 place-items-center rounded-full text-primary-foreground shadow-[var(--shadow-float)] transition-transform active:scale-95"
       >
         <Plus size={26} strokeWidth={2.6} />

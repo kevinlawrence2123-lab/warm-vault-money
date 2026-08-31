@@ -4,7 +4,8 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, Chip, IconBubble } from "@/components/app/primitives";
-import { CURRENCIES } from "@/lib/format";
+import { CURRENCIES, DEFAULT_CURRENCY } from "@/lib/format";
+import { useT } from "@/lib/i18n";
 import { GOAL_ICON_CHOICES } from "@/lib/icons";
 import { useInvalidateAll, useProfile } from "@/lib/data";
 
@@ -22,10 +23,11 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
 
 function Onboarding() {
   const navigate = useNavigate();
+  const t = useT();
   const invalidate = useInvalidateAll();
   const { data: profile } = useProfile();
   const [step, setStep] = useState(0);
-  const [currency, setCurrency] = useState(profile?.currency ?? "USD");
+  const [currency, setCurrency] = useState(profile?.currency ?? DEFAULT_CURRENCY);
   const [goalName, setGoalName] = useState("");
   const [goalIcon, setGoalIcon] = useState("target");
   const [goalTarget, setGoalTarget] = useState("");
@@ -54,7 +56,7 @@ function Onboarding() {
       invalidate();
       navigate({ to: "/home", replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not save");
+      toast.error(err instanceof Error ? err.message : t("common.couldNotSave"));
     } finally {
       setBusy(false);
     }
@@ -64,15 +66,13 @@ function Onboarding() {
     <div className="mx-auto min-h-screen w-full max-w-lg space-y-6 px-5 py-12">
       <div>
         <p className="text-xs font-bold tracking-[0.2em] text-primary uppercase">
-          Step {step + 1} of 2
+          {t("onboarding.step", { n: step + 1 })}
         </p>
         <h1 className="amount-xl mt-2 text-3xl">
-          {step === 0 ? "Pick your currency" : "Your first savings goal"}
+          {step === 0 ? t("onboarding.pickCurrency") : t("onboarding.firstGoal")}
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {step === 0
-            ? "All amounts across MyBudget will be shown in this currency."
-            : "Optional — you can always add goals later."}
+          {step === 0 ? t("onboarding.currencyHint") : t("onboarding.goalHint")}
         </p>
       </div>
 
@@ -100,7 +100,7 @@ function Onboarding() {
             onClick={() => setStep(1)}
             className="gold-gradient flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-primary-foreground"
           >
-            Continue <ArrowRight size={17} />
+            {t("common.continue")} <ArrowRight size={17} />
           </button>
         </>
       ) : (
@@ -109,14 +109,14 @@ function Onboarding() {
             <input
               value={goalName}
               onChange={(e) => setGoalName(e.target.value)}
-              placeholder="Goal name — e.g. Dream vacation"
+              placeholder={t("onboarding.goalNamePlaceholder")}
               className="w-full bg-transparent text-base font-semibold outline-none placeholder:text-muted-foreground"
             />
             <input
               value={goalTarget}
               inputMode="decimal"
               onChange={(e) => setGoalTarget(e.target.value.replace(/[^0-9.]/g, ""))}
-              placeholder="Target amount"
+              placeholder={t("onboarding.targetAmount")}
               className="w-full bg-transparent text-base font-semibold outline-none placeholder:text-muted-foreground"
             />
             <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
@@ -136,10 +136,10 @@ function Onboarding() {
               className="gold-gradient flex w-full items-center justify-center gap-2 rounded-full py-4 font-bold text-primary-foreground disabled:opacity-60"
             >
               {busy && <Loader2 size={16} className="animate-spin" />}
-              Create goal & finish
+              {t("onboarding.createFinish")}
             </button>
             <Chip className="w-full py-3" onClick={() => finish(false)}>
-              Skip for now
+              {t("onboarding.skip")}
             </Chip>
           </div>
         </>
