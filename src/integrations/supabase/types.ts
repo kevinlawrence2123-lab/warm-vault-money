@@ -111,50 +111,76 @@ export type Database = {
       }
       detected_transactions: {
         Row: {
+          account_id: string | null
           amount: number
           app_name: string
           category_id: string | null
           created_at: string
           detected_at: string
+          external_ref: string | null
           id: string
+          merchant: string | null
           raw_text: string | null
           source_key: string
           status: string
+          transaction_id: string | null
           type: string
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           amount?: number
           app_name?: string
           category_id?: string | null
           created_at?: string
           detected_at?: string
+          external_ref?: string | null
           id?: string
+          merchant?: string | null
           raw_text?: string | null
           source_key?: string
           status?: string
+          transaction_id?: string | null
           type?: string
           user_id: string
         }
         Update: {
+          account_id?: string | null
           amount?: number
           app_name?: string
           category_id?: string | null
           created_at?: string
           detected_at?: string
+          external_ref?: string | null
           id?: string
+          merchant?: string | null
           raw_text?: string | null
           source_key?: string
           status?: string
+          transaction_id?: string | null
           type?: string
           user_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "detected_transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "detected_transactions_category_id_fkey"
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "detected_transactions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -183,26 +209,81 @@ export type Database = {
         }
         Relationships: []
       }
+      detection_rules: {
+        Row: {
+          auto_confirm: boolean
+          category_id: string | null
+          created_at: string
+          id: string
+          keyword: string
+          user_id: string
+        }
+        Insert: {
+          auto_confirm?: boolean
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          keyword: string
+          user_id: string
+        }
+        Update: {
+          auto_confirm?: boolean
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          keyword?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "detection_rules_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       detection_settings: {
         Row: {
+          auto_save: boolean
           created_at: string
+          default_account_id: string | null
           enabled: boolean
+          ingest_token: string
+          last_ingest_at: string | null
           permission_granted: boolean
           user_id: string
         }
         Insert: {
+          auto_save?: boolean
           created_at?: string
+          default_account_id?: string | null
           enabled?: boolean
+          ingest_token?: string
+          last_ingest_at?: string | null
           permission_granted?: boolean
           user_id: string
         }
         Update: {
+          auto_save?: boolean
           created_at?: string
+          default_account_id?: string | null
           enabled?: boolean
+          ingest_token?: string
+          last_ingest_at?: string | null
           permission_granted?: boolean
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "detection_settings_default_account_id_fkey"
+            columns: ["default_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       detection_sources: {
         Row: {
