@@ -17,7 +17,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app/AppShell";
 import { Card, Chip } from "@/components/app/primitives";
-import { CURRENCIES, LANGUAGES } from "@/lib/format";
+import { CURRENCIES, DEFAULT_CURRENCY, LANGUAGES } from "@/lib/format";
+import { useI18n, type Lang } from "@/lib/i18n";
 import { useInvalidateAll, useProfile, useTransactions } from "@/lib/data";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -34,13 +35,14 @@ export const Route = createFileRoute("/_authenticated/profile")({
 
 function ProfilePage() {
   const navigate = useNavigate();
+  const { t, setLang } = useI18n();
   const queryClient = useQueryClient();
   const invalidate = useInvalidateAll();
   const { data: profile } = useProfile();
   const { data: transactions = [] } = useTransactions();
 
   const [name, setName] = useState("");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const [language, setLanguage] = useState("en");
   const [pinLock, setPinLock] = useState(false);
   const [notifications, setNotifications] = useState(true);
@@ -48,7 +50,7 @@ function ProfilePage() {
   useEffect(() => {
     if (!profile) return;
     setName(profile.name ?? "");
-    setCurrency(profile.currency ?? "USD");
+    setCurrency(profile.currency ?? DEFAULT_CURRENCY);
     setLanguage(profile.language ?? "en");
     setPinLock(Boolean(profile.pin_enabled));
     setNotifications(profile.notifications_enabled ?? true);
@@ -62,7 +64,7 @@ function ProfilePage() {
       return;
     }
     invalidate();
-    toast.success("Saved");
+    toast.success(t("common.saved"));
   }
 
   function exportData() {
@@ -85,14 +87,14 @@ function ProfilePage() {
   }
 
   return (
-    <AppShell title="Profile">
+    <AppShell title={t("profile.title")}>
       <Card className="space-y-4">
         <div className="flex items-center gap-3">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-surface text-xl font-bold">
             {(profile?.name || profile?.email || "?").charAt(0).toUpperCase()}
           </span>
           <div className="min-w-0">
-            <p className="truncate font-bold">{profile?.name || "Your name"}</p>
+            <p className="truncate font-bold">{profile?.name || t("profile.yourName")}</p>
             <p className="truncate text-xs text-muted-foreground">{profile?.email}</p>
           </div>
         </div>
@@ -100,14 +102,14 @@ function ProfilePage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           onBlur={() => name !== profile?.name && save({ name })}
-          placeholder="Display name"
+          placeholder={t("profile.displayName")}
           className="w-full rounded-full bg-surface px-4 py-3 text-sm font-semibold outline-none placeholder:text-muted-foreground"
         />
       </Card>
 
       <Card className="space-y-4">
-        <p className="font-bold">Preferences</p>
-        <Row label="Currency">
+        <p className="font-bold">{t("profile.preferences")}</p>
+        <Row label={t("profile.currency")}>
           <select
             value={currency}
             onChange={(e) => {
@@ -123,12 +125,14 @@ function ProfilePage() {
             ))}
           </select>
         </Row>
-        <Row label="Language">
+        <Row label={t("profile.language")}>
           <select
             value={language}
             onChange={(e) => {
-              setLanguage(e.target.value);
-              void save({ language: e.target.value });
+              const next = e.target.value as Lang;
+              setLanguage(next);
+              setLang(next);
+              void save({ language: next });
             }}
             className="bg-transparent text-sm font-semibold outline-none"
           >
@@ -139,7 +143,7 @@ function ProfilePage() {
             ))}
           </select>
         </Row>
-        <Row label={<Inline icon={<Bell size={15} />}>Notifications</Inline>}>
+        <Row label={<Inline icon={<Bell size={15} />}>{t("profile.notifications")}</Inline>}>
           <Toggle
             on={notifications}
             onChange={(v) => {
@@ -148,7 +152,7 @@ function ProfilePage() {
             }}
           />
         </Row>
-        <Row label={<Inline icon={<Fingerprint size={15} />}>PIN / biometric lock</Inline>}>
+        <Row label={<Inline icon={<Fingerprint size={15} />}>{t("profile.pinLock")}</Inline>}>
           <Toggle
             on={pinLock}
             onChange={(v) => {
@@ -157,28 +161,28 @@ function ProfilePage() {
             }}
           />
         </Row>
-        <Row label={<Inline icon={<Moon size={15} />}>Dark theme</Inline>}>
-          <span className="text-xs text-muted-foreground">Always on</span>
+        <Row label={<Inline icon={<Moon size={15} />}>{t("profile.darkTheme")}</Inline>}>
+          <span className="text-xs text-muted-foreground">{t("profile.alwaysOn")}</span>
         </Row>
       </Card>
 
       <Link to="/accounts">
         <Card className="flex items-center gap-3">
           <Wallet size={17} className="text-primary" />
-          <p className="flex-1 font-semibold">Accounts</p>
+          <p className="flex-1 font-semibold">{t("profile.accounts")}</p>
           <ChevronRight size={17} className="text-muted-foreground" />
         </Card>
       </Link>
 
       <Card className="space-y-3">
-        <p className="font-bold">Connect data</p>
+        <p className="font-bold">{t("profile.connectData")}</p>
         <p className="text-xs text-muted-foreground">
-          Automatic synchronisation is coming soon.
+          {t("profile.connectHint")}
         </p>
         <div className="space-y-2">
           <Link to="/detection" className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-3">
             <Radar size={16} className="text-primary" />
-            <span className="flex-1 text-sm font-semibold">Automatic detection</span>
+            <span className="flex-1 text-sm font-semibold">{t("profile.autoDetection")}</span>
             <ChevronRight size={16} className="text-muted-foreground" />
           </Link>
           <Link
@@ -186,12 +190,12 @@ function ProfilePage() {
             className="flex items-center gap-3 rounded-2xl bg-surface px-3 py-3"
           >
             <Smartphone size={16} className="text-primary" />
-            <span className="flex-1 text-sm font-semibold">iPhone setup</span>
+            <span className="flex-1 text-sm font-semibold">{t("profile.iphoneSetup")}</span>
             <ChevronRight size={16} className="text-muted-foreground" />
           </Link>
-          {["Bank account", "Mobile banking", "Nita", "Amana"].map((label) => (
+          {[t("profile.bankAccount"), t("profile.mobileBanking"), "Nita", "Amana"].map((label) => (
             <div key={label} className="flex items-center gap-3">
-              {label === "Bank account" ? (
+              {label === t("profile.bankAccount") ? (
                 <Landmark size={16} className="text-muted-foreground" />
               ) : (
                 <Smartphone size={16} className="text-muted-foreground" />
@@ -199,9 +203,13 @@ function ProfilePage() {
               <span className="flex-1 text-sm">{label}</span>
               <Chip
                 className="text-xs opacity-60"
-                onClick={() => toast("Coming soon", { description: `${label} sync isn't available yet.` })}
+                onClick={() =>
+                  toast(t("common.comingSoon"), {
+                    description: t("profile.comingSoonDesc", { label }),
+                  })
+                }
               >
-                Connect
+                {t("common.connect")}
               </Chip>
             </div>
           ))}
@@ -211,10 +219,10 @@ function ProfilePage() {
 
       <Card className="space-y-3">
         <Chip className="inline-flex items-center gap-2" onClick={exportData}>
-          <Download size={14} /> Export my data
+          <Download size={14} /> {t("profile.exportData")}
         </Chip>
         <Chip className="inline-flex items-center gap-2 text-destructive" onClick={signOut}>
-          <LogOut size={14} /> Log out
+          <LogOut size={14} /> {t("profile.logOut")}
         </Chip>
       </Card>
     </AppShell>

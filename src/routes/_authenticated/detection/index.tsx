@@ -13,6 +13,7 @@ import {
   useToggleSource,
   type SourceStatus,
 } from "@/lib/detection";
+import { useT, type TKey } from "@/lib/i18n";
 
 export const Route = createFileRoute("/_authenticated/detection/")({
   head: () => ({
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/_authenticated/detection/")({
 });
 
 function DetectionSettingsPage() {
+  const t = useT();
   const { data: settings } = useDetectionSettings();
   const { data: sources = [] } = useDetectionSources();
   const saveSettings = useSaveDetectionSettings();
@@ -51,38 +53,33 @@ function DetectionSettingsPage() {
     await saveSettings.mutateAsync({ enabled: on });
     if (on && !permission) {
       const opened = requestNotificationAccess();
-      toast(opened ? "Opening Android settings…" : "Grant notification access", {
-        description: opened
-          ? "Enable MyBudget in the notification access list."
-          : "Open Android Settings › Notifications › Notification access and allow MyBudget.",
+      toast(opened ? t("detection.openingAndroid") : t("detection.grantToast"), {
+        description: opened ? t("detection.openingDesc") : t("detection.grantToastDesc"),
       });
     }
   }
 
   return (
-    <PageShell title="Automatic detection">
+    <PageShell title={t("detection.title")}>
       <Card className="space-y-3" wavy>
         <span className="grid h-11 w-11 place-items-center rounded-full bg-surface text-primary">
           <ShieldCheck size={20} />
         </span>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          MyBudget can automatically detect deposits and withdrawals from your bank and
-          mobile money apps by reading their notifications on this device. No notification
-          content is sent to our servers — only the detected amount, type, and app name are
-          saved.
+          {t("detection.intro")}
         </p>
       </Card>
 
       <Card className="space-y-4">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="font-bold">Enable automatic detection</p>
+            <p className="font-bold">{t("detection.enable")}</p>
             <p className="text-xs text-muted-foreground">
               {master
                 ? permission
-                  ? "Notification access granted."
-                  : "Waiting for notification access."
-                : "Turned off on this device."}
+                  ? t("detection.granted")
+                  : t("detection.waiting")
+                : t("detection.off")}
             </p>
           </div>
           <Toggle on={master} onChange={(v) => void setMaster(v)} />
@@ -90,29 +87,29 @@ function DetectionSettingsPage() {
 
         {master && !permission && (
           <div className="space-y-3 rounded-2xl bg-surface p-4">
-            <p className="text-sm font-bold">Grant notification access</p>
+            <p className="text-sm font-bold">{t("detection.grantTitle")}</p>
             <ol className="space-y-1.5 text-xs text-muted-foreground">
-              <li>1. Open Android Settings › Notifications.</li>
-              <li>2. Tap “Notification access” (or “Device &amp; app notifications”).</li>
-              <li>3. Find MyBudget and turn it on, then confirm.</li>
+              <li>{t("detection.step1")}</li>
+              <li>{t("detection.step2")}</li>
+              <li>{t("detection.step3")}</li>
             </ol>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => {
                   const opened = requestNotificationAccess();
-                  if (!opened) toast("Open Android Settings › Notification access");
+                  if (!opened) toast(t("detection.openHint"));
                 }}
                 className="gold-gradient rounded-full px-4 py-2 text-sm font-bold text-primary-foreground"
               >
-                Open system settings
+                {t("detection.openSettings")}
               </button>
               <button
                 type="button"
                 onClick={() => void saveSettings.mutateAsync({ permission_granted: true })}
                 className="rounded-full bg-card px-4 py-2 text-sm font-semibold"
               >
-                I've granted it
+                {t("detection.granted.btn")}
               </button>
             </div>
           </div>
@@ -120,7 +117,7 @@ function DetectionSettingsPage() {
       </Card>
 
       <Card className="space-y-4">
-        <p className="font-bold">Supported apps</p>
+        <p className="font-bold">{t("detection.supportedApps")}</p>
         {DETECTION_SOURCES.map((src) => {
           const on = enabledFor(src.key);
           const status = sourceStatus(settings, on);
@@ -128,7 +125,9 @@ function DetectionSettingsPage() {
             <div key={src.key} className="flex items-center gap-3">
               <IconBubble icon={src.icon} size="sm" />
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold">{src.label}</p>
+                <p className="truncate text-sm font-semibold">
+                  {t(`detection.source.${src.key}` as TKey)}
+                </p>
                 <StatusPill status={status} />
               </div>
               <Toggle
@@ -149,7 +148,7 @@ function DetectionSettingsPage() {
       <Link to="/detection/iphone">
         <Card className="flex items-center gap-3">
           <Smartphone size={17} className="text-primary" />
-          <p className="flex-1 font-semibold">Set up automatic detection on iPhone</p>
+          <p className="flex-1 font-semibold">{t("detection.iphoneLink")}</p>
           <ChevronRight size={17} className="text-muted-foreground" />
         </Card>
       </Link>
@@ -158,13 +157,20 @@ function DetectionSettingsPage() {
 }
 
 function StatusPill({ status }: { status: SourceStatus }) {
+  const t = useT();
+  const labelKey: TKey =
+    status === "Active"
+      ? "detection.status.active"
+      : status === "Waiting for permission"
+        ? "detection.status.waiting"
+        : "detection.status.off";
   const tone =
     status === "Active"
       ? "text-success"
       : status === "Waiting for permission"
         ? "text-warning"
         : "text-muted-foreground";
-  return <p className={`text-[11px] font-semibold ${tone}`}>{status}</p>;
+  return <p className={`text-[11px] font-semibold ${tone}`}>{t(labelKey)}</p>;
 }
 
 function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {

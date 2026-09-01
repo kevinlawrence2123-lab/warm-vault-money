@@ -3,7 +3,8 @@ import { BellOff, Check, Inbox, X } from "lucide-react";
 import { toast } from "sonner";
 import { PageShell } from "@/components/app/AppShell";
 import { Card, EmptyState, IconBubble } from "@/components/app/primitives";
-import { formatMoney } from "@/lib/format";
+import { dateTimeLabel, formatMoney } from "@/lib/format";
+import { useT, type TKey } from "@/lib/i18n";
 import { useCategories, useCurrency } from "@/lib/data";
 import {
   DETECTION_SOURCES,
@@ -32,10 +33,16 @@ export const Route = createFileRoute("/_authenticated/detections")({
 
 function DetectionsPage() {
   const navigate = useNavigate();
+  const t = useT();
   const currency = useCurrency();
   const { data: detections = [], isLoading } = useDetectedTransactions();
   const { data: categories = [] } = useCategories();
   const resolve = useResolveDetection();
+
+  function sourceLabel(d: DetectedTransaction) {
+    const known = DETECTION_SOURCES.some((s) => s.key === d.source_key);
+    return known ? t(`detection.source.${d.source_key}` as TKey) : d.app_name;
+  }
 
   function iconFor(sourceKey: string) {
     return DETECTION_SOURCES.find((s) => s.key === sourceKey)?.icon ?? "smartphone";
@@ -56,18 +63,18 @@ function DetectionsPage() {
   async function dismiss(d: DetectedTransaction, action: "ignored" | "muted") {
     try {
       await resolve.mutateAsync({ detection: d, action });
-      toast.success(action === "muted" ? "Similar detections muted" : "Detection ignored");
+      toast.success(action === "muted" ? t("detections.muted") : t("detections.ignored"));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not update");
+      toast.error(err instanceof Error ? err.message : t("detections.couldNotUpdate"));
     }
   }
 
   return (
-    <PageShell title="Detected transactions">
+    <PageShell title={t("detections.title")}>
       {!isLoading && detections.length === 0 ? (
         <EmptyState
-          title="No new detections"
-          description="Deposits and withdrawals spotted in your bank and mobile money notifications will land here for review."
+          title={t("detections.empty")}
+          description={t("detections.emptyDesc")}
           action={
             <span className="grid h-16 w-16 place-items-center rounded-full bg-surface text-muted-foreground">
               <Inbox size={28} />
@@ -83,15 +90,12 @@ function DetectionsPage() {
                 <div className="flex items-center gap-3">
                   <IconBubble icon={iconFor(d.source_key)} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">{d.app_name}</p>
+                    <p className="truncate text-sm font-semibold">
+                      {sourceLabel(d)}
+                    </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {category?.name ?? "Uncategorized"} ·{" "}
-                      {new Date(d.detected_at).toLocaleString("en-US", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {category?.name ?? t("detections.uncategorized")} ·{" "}
+                      {dateTimeLabel(d.detected_at)}
                     </p>
                   </div>
                   <span
@@ -114,21 +118,21 @@ function DetectionsPage() {
                     onClick={() => confirm(d)}
                     className="gold-gradient inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold text-primary-foreground"
                   >
-                    <Check size={14} /> Confirm
+                    <Check size={14} /> {t("detections.confirm")}
                   </button>
                   <button
                     type="button"
                     onClick={() => void dismiss(d, "ignored")}
                     className="inline-flex items-center gap-1.5 rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted-foreground"
                   >
-                    <X size={14} /> Ignore
+                    <X size={14} /> {t("detections.ignore")}
                   </button>
                   <button
                     type="button"
                     onClick={() => void dismiss(d, "muted")}
                     className="inline-flex items-center gap-1.5 rounded-full bg-surface px-4 py-2 text-sm font-semibold text-muted-foreground"
                   >
-                    <BellOff size={14} /> Always ignore
+                    <BellOff size={14} /> {t("detections.alwaysIgnore")}
                   </button>
                 </div>
               </Card>
