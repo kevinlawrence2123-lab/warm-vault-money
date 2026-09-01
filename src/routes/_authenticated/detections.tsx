@@ -39,6 +39,11 @@ function DetectionsPage() {
   const { data: categories = [] } = useCategories();
   const resolve = useResolveDetection();
 
+  function sourceLabel(d: DetectedTransaction) {
+    const known = DETECTION_SOURCES.some((s) => s.key === d.source_key);
+    return known ? t(`detection.source.${d.source_key}` as TKey) : d.app_name;
+  }
+
   function iconFor(sourceKey: string) {
     return DETECTION_SOURCES.find((s) => s.key === sourceKey)?.icon ?? "smartphone";
   }
@@ -86,7 +91,7 @@ function DetectionsPage() {
                   <IconBubble icon={iconFor(d.source_key)} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">
-                      {t(`detection.source.${d.source_key}` as TKey)}
+                      {sourceLabel(d)}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {category?.name ?? t("detections.uncategorized")} ·{" "}
