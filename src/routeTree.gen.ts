@@ -26,6 +26,7 @@ import { Route as AuthenticatedGoalsGoalIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedTransactionsIndexRouteImport } from './routes/_authenticated/transactions/index'
 import { Route as AuthenticatedTransactionsTransactionIdRouteImport } from './routes/_authenticated/transactions/$transactionId'
 import { Route as AuthenticatedTransactionsNewRouteImport } from './routes/_authenticated/transactions/new'
+import { Route as ApiPublicDetectionIngestRouteImport } from './routes/api/public/detection-ingest'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -117,6 +118,12 @@ const AuthenticatedTransactionsNewRoute =
     path: '/transactions/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicDetectionIngestRoute =
+  ApiPublicDetectionIngestRouteImport.update({
+    id: '/api/public/detection-ingest',
+    path: '/api/public/detection-ingest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/api/public/detection-ingest': typeof ApiPublicDetectionIngestRoute
   '/detection/': typeof AuthenticatedDetectionIndexRoute
   '/goals/': typeof AuthenticatedGoalsIndexRoute
   '/transactions/': typeof AuthenticatedTransactionsIndexRoute
@@ -150,6 +158,7 @@ export interface FileRoutesByTo {
   '/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/api/public/detection-ingest': typeof ApiPublicDetectionIngestRoute
   '/detection': typeof AuthenticatedDetectionIndexRoute
   '/goals': typeof AuthenticatedGoalsIndexRoute
   '/transactions': typeof AuthenticatedTransactionsIndexRoute
@@ -170,6 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/goals/$goalId': typeof AuthenticatedGoalsGoalIdRoute
   '/_authenticated/transactions/$transactionId': typeof AuthenticatedTransactionsTransactionIdRoute
   '/_authenticated/transactions/new': typeof AuthenticatedTransactionsNewRoute
+  '/api/public/detection-ingest': typeof ApiPublicDetectionIngestRoute
   '/_authenticated/detection/': typeof AuthenticatedDetectionIndexRoute
   '/_authenticated/goals/': typeof AuthenticatedGoalsIndexRoute
   '/_authenticated/transactions/': typeof AuthenticatedTransactionsIndexRoute
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/goals/$goalId'
     | '/transactions/$transactionId'
     | '/transactions/new'
+    | '/api/public/detection-ingest'
     | '/detection/'
     | '/goals/'
     | '/transactions/'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/goals/$goalId'
     | '/transactions/$transactionId'
     | '/transactions/new'
+    | '/api/public/detection-ingest'
     | '/detection'
     | '/goals'
     | '/transactions'
@@ -227,6 +239,7 @@ export interface FileRouteTypes {
     | '/_authenticated/goals/$goalId'
     | '/_authenticated/transactions/$transactionId'
     | '/_authenticated/transactions/new'
+    | '/api/public/detection-ingest'
     | '/_authenticated/detection/'
     | '/_authenticated/goals/'
     | '/_authenticated/transactions/'
@@ -237,6 +250,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   QuickAddRoute: typeof QuickAddRoute
+  ApiPublicDetectionIngestRoute: typeof ApiPublicDetectionIngestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -360,6 +374,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTransactionsNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/detection-ingest': {
+      id: '/api/public/detection-ingest'
+      path: '/api/public/detection-ingest'
+      fullPath: '/api/public/detection-ingest'
+      preLoaderRoute: typeof ApiPublicDetectionIngestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -404,6 +425,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   QuickAddRoute: QuickAddRoute,
+  ApiPublicDetectionIngestRoute: ApiPublicDetectionIngestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
