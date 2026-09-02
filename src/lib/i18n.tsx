@@ -497,7 +497,7 @@ const fr: Partial<Record<TKey, string>> = {
 
   "detection.title": "Détection automatique",
   "detection.intro":
-    "MyBudget peut détecter automatiquement les dépôts et retraits de vos applis bancaires et mobile money en lisant leurs notifications sur cet appareil. Aucun contenu de notification n'est envoyé à nos serveurs — seuls le montant, le type et le nom de l'appli détectés sont enregistrés.",
+    "MyBudget peut détecter automatiquement les dépôts et retraits de vos applis bancaires et mobile money. Une petite automatisation sur votre téléphone transmet le texte de la notification à votre adresse MyBudget privée ; MyBudget en extrait le montant, le sens et le commerçant, puis ne conserve que ces informations et un court extrait du message.",
   "detection.enable": "Activer la détection automatique",
   "detection.granted": "Accès aux notifications accordé.",
   "detection.waiting": "En attente de l'accès aux notifications.",
