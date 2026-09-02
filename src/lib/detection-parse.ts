@@ -115,7 +115,13 @@ function extractMerchant(text: string): string | null {
   for (const re of patterns) {
     const m = re.exec(text);
     const value = m?.[1]?.trim();
-    if (value && !/^\d+$/.test(value)) return value.replace(/\s{2,}/g, " ").slice(0, 60);
+    if (value && !/^\d+$/.test(value)) {
+      const trimmed = value
+        .replace(/\s+(effectu[ée]?e?|r[ée]ussi[e]?|confirm[ée]?e?|success(ful)?|completed)$/i, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      if (trimmed) return trimmed.slice(0, 60);
+    }
   }
   return null;
 }
