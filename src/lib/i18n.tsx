@@ -208,7 +208,7 @@ const en = {
 
   "detection.title": "Automatic detection",
   "detection.intro":
-    "MyBudget can automatically detect deposits and withdrawals from your bank and mobile money apps by reading their notifications on this device. No notification content is sent to our servers — only the detected amount, type, and app name are saved.",
+    "MyBudget can automatically detect deposits and withdrawals from your bank and mobile money apps. A small automation on your phone forwards the notification text to your private MyBudget address; MyBudget extracts the amount, the direction and the merchant, then keeps only those details plus a short excerpt of the message.",
   "detection.enable": "Enable automatic detection",
   "detection.granted": "Notification access granted.",
   "detection.waiting": "Waiting for notification access.",
