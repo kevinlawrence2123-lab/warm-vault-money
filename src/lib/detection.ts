@@ -14,6 +14,17 @@ export interface DetectionSettings {
   user_id: string;
   enabled: boolean;
   permission_granted: boolean;
+  ingest_token: string;
+  auto_save: boolean;
+  default_account_id: string | null;
+  last_ingest_at: string | null;
+}
+
+export interface DetectionRule {
+  id: string;
+  keyword: string;
+  category_id: string | null;
+  auto_confirm: boolean;
 }
 
 export interface DetectionSource {
@@ -33,6 +44,9 @@ export interface DetectedTransaction {
   raw_text: string | null;
   detected_at: string;
   status: string;
+  merchant: string | null;
+  account_id: string | null;
+  transaction_id: string | null;
 }
 
 async function uid() {
@@ -81,6 +95,50 @@ export function useDetectedTransactions() {
       return (data ?? []) as DetectedTransaction[];
     },
   });
+}
+
+export function useDetectionRules() {
+  return useQuery({
+    queryKey: ["detection-rules"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("detection_rules")
+        .select("id, keyword, category_id, auto_confirm")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as DetectionRule[];
+    },
+  });
+}
+
+export function useSaveDetectionRule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (rule: { keyword: string; category_id: string | null; auto_confirm: boolean }) => {
+      const user_id = await uid();
+      if (!user_id) throw new Error("Not signed in");
+      const { error } = await supabase.from("detection_rules").insert({ user_id, ...rule });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["detection-rules"] }),
+  });
+}
+
+export function useDeleteDetectionRule() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("detection_rules").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["detection-rules"] }),
+  });
+}
+
+/** The public URL a phone automation posts notification text to. */
+export function ingestEndpoint() {
+  const origin = typeof window === "undefined" ? "" : window.location.origin;
+  return `${origin}/api/public/detection-ingest`;
 }
 
 export function useSaveDetectionSettings() {
