@@ -87,6 +87,18 @@ function scoreWords(text: string, words: string[]) {
   return words.reduce((n, w) => (text.includes(w) ? n + 1 : n), 0);
 }
 
+const OTP_RE =
+  /\b(otp|one[- ]time|code (?:is|:)|verification code|security code|mot de passe|code de v[ée]rification|code secret|pin code)\b/i;
+
+/** True when the message is a transaction notice rather than an OTP/marketing text. */
+export function looksTransactional(text: string) {
+  const lower = text.toLowerCase();
+  if (OTP_RE.test(text)) return false;
+  const hasWord =
+    scoreWords(lower, INCOME_WORDS) > 0 || scoreWords(lower, EXPENSE_WORDS) > 0;
+  return hasWord || CURRENCY_HINT.test(text);
+}
+
 export function detectType(text: string): "expense" | "income" {
   const lower = text.toLowerCase();
   const income = scoreWords(lower, INCOME_WORDS);
@@ -97,14 +109,21 @@ export function detectType(text: string): "expense" | "income" {
 
 function extractMerchant(text: string): string | null {
   const patterns = [
-    /(?:from|de)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|at|à|ref|id|bal)\b|$)/i,
     /(?:to|at|chez|vers|à)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|ref|id|bal)\b|$)/i,
+    /(?:from|de|par)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|at|à|chez|ref|id|bal)\b|$)/i,
   ];
   for (const re of patterns) {
     const m = re.exec(text);
     const value = m?.[1]?.trim();
-    if (value && !/^\d+$/.test(value)) return value.replace(/\s{2,}/g, " ").slice(0, 60);
+    if (value && !/^\d/.test(value) && !/^\d+$/.test(value)) {
+      const trimmed = value
+        .replace(/\s+(effectu[ée]?e?|r[ée]ussi[e]?|confirm[ée]?e?|success(ful)?|completed)$/i, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      if (trimmed) return trimmed.slice(0, 60);
+    }
   }
+
   return null;
 }
 
@@ -129,6 +148,7 @@ function extractBalance(text: string): number | null {
  */
 export function parseNotification(text: string): ParsedNotification | null {
   if (!text || !text.trim()) return null;
+  if (!looksTransactional(text)) return null;
 
   const balance = extractBalance(text);
   const candidates: number[] = [];

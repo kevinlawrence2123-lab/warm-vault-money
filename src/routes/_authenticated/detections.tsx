@@ -94,6 +94,7 @@ function DetectionsPage() {
                       {sourceLabel(d)}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
+                      {d.merchant ? `${d.merchant} · ` : ""}
                       {category?.name ?? t("detections.uncategorized")} ·{" "}
                       {dateTimeLabel(d.detected_at)}
                     </p>
