@@ -87,6 +87,18 @@ function scoreWords(text: string, words: string[]) {
   return words.reduce((n, w) => (text.includes(w) ? n + 1 : n), 0);
 }
 
+const OTP_RE =
+  /\b(otp|one[- ]time|code (?:is|:)|verification code|security code|mot de passe|code de v[ée]rification|code secret|pin code)\b/i;
+
+/** True when the message is a transaction notice rather than an OTP/marketing text. */
+export function looksTransactional(text: string) {
+  const lower = text.toLowerCase();
+  if (OTP_RE.test(text)) return false;
+  const hasWord =
+    scoreWords(lower, INCOME_WORDS) > 0 || scoreWords(lower, EXPENSE_WORDS) > 0;
+  return hasWord || CURRENCY_HINT.test(text);
+}
+
 export function detectType(text: string): "expense" | "income" {
   const lower = text.toLowerCase();
   const income = scoreWords(lower, INCOME_WORDS);
@@ -129,6 +141,7 @@ function extractBalance(text: string): number | null {
  */
 export function parseNotification(text: string): ParsedNotification | null {
   if (!text || !text.trim()) return null;
+  if (!looksTransactional(text)) return null;
 
   const balance = extractBalance(text);
   const candidates: number[] = [];
