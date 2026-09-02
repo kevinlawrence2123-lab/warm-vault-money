@@ -109,13 +109,13 @@ export function detectType(text: string): "expense" | "income" {
 
 function extractMerchant(text: string): string | null {
   const patterns = [
-    /(?:from|de)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|at|à|ref|id|bal)\b|$)/i,
     /(?:to|at|chez|vers|à)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|ref|id|bal)\b|$)/i,
+    /(?:from|de|par)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|at|à|chez|ref|id|bal)\b|$)/i,
   ];
   for (const re of patterns) {
     const m = re.exec(text);
     const value = m?.[1]?.trim();
-    if (value && !/^\d+$/.test(value)) {
+    if (value && !/^\d/.test(value) && !/^\d+$/.test(value)) {
       const trimmed = value
         .replace(/\s+(effectu[ée]?e?|r[ée]ussi[e]?|confirm[ée]?e?|success(ful)?|completed)$/i, "")
         .replace(/\s{2,}/g, " ")
@@ -123,6 +123,7 @@ function extractMerchant(text: string): string | null {
       if (trimmed) return trimmed.slice(0, 60);
     }
   }
+
   return null;
 }
 
