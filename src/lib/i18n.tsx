@@ -64,6 +64,24 @@ const en = {
   "auth.createOne": "Create an account",
   "auth.haveAccount": "Already have an account?",
   "auth.checkEmail": "Check your email to confirm your account.",
+  "auth.forgot": "Forgot your password?",
+  "auth.forgotTitle": "Reset your password",
+  "auth.forgotSubtitle": "Enter your email: we'll send you a link to choose a new password.",
+  "auth.sendResetLink": "Send the link",
+  "auth.resetSent": "Email sent. Open the link on this device to choose a new password.",
+  "auth.resetTitle": "New password",
+  "auth.resetSubtitle": "Choose a new password for your account.",
+  "auth.newPassword": "New password",
+  "auth.savePassword": "Save password",
+  "auth.passwordUpdated": "Password updated, you're signed in.",
+  "auth.resendConfirm": "Resend the confirmation email",
+  "auth.err.invalid": "Wrong email or password.",
+  "auth.err.unconfirmed": "Your email isn't confirmed yet. Check your inbox (and spam).",
+  "auth.err.exists": "An account already exists with this email. Sign in instead.",
+  "auth.err.weak": "Password too short: use at least 6 characters.",
+  "auth.err.email": "This email address can't be used.",
+  "auth.err.rate": "Too many attempts. Wait a minute and try again.",
+  "auth.err.network": "No connection. Check your internet and try again.",
 
   "onboarding.step": "Step {n} of 2",
   "onboarding.pickCurrency": "Pick your currency",
@@ -397,6 +415,24 @@ const fr: Partial<Record<TKey, string>> = {
   "auth.createOne": "Créer un compte",
   "auth.haveAccount": "Vous avez déjà un compte ?",
   "auth.checkEmail": "Vérifiez vos e-mails pour confirmer votre compte.",
+  "auth.forgot": "Mot de passe oublié ?",
+  "auth.forgotTitle": "Réinitialiser le mot de passe",
+  "auth.forgotSubtitle": "Entrez votre e-mail : nous vous envoyons un lien pour choisir un nouveau mot de passe.",
+  "auth.sendResetLink": "Envoyer le lien",
+  "auth.resetSent": "E-mail envoyé. Ouvrez le lien sur cet appareil pour choisir un nouveau mot de passe.",
+  "auth.resetTitle": "Nouveau mot de passe",
+  "auth.resetSubtitle": "Choisissez un nouveau mot de passe pour votre compte.",
+  "auth.newPassword": "Nouveau mot de passe",
+  "auth.savePassword": "Enregistrer le mot de passe",
+  "auth.passwordUpdated": "Mot de passe modifié, vous êtes connecté.",
+  "auth.resendConfirm": "Renvoyer l'e-mail de confirmation",
+  "auth.err.invalid": "E-mail ou mot de passe incorrect.",
+  "auth.err.unconfirmed": "Votre e-mail n'est pas encore confirmé. Regardez votre boîte de réception (et les spams).",
+  "auth.err.exists": "Un compte existe déjà avec cet e-mail. Connectez-vous plutôt.",
+  "auth.err.weak": "Mot de passe trop court : au moins 6 caractères.",
+  "auth.err.email": "Cette adresse e-mail ne peut pas être utilisée.",
+  "auth.err.rate": "Trop de tentatives. Attendez une minute et réessayez.",
+  "auth.err.network": "Pas de connexion. Vérifiez internet et réessayez.",
 
   "onboarding.step": "Étape {n} sur 2",
   "onboarding.pickCurrency": "Choisissez votre devise",
@@ -723,6 +759,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const stored = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null;
     if (stored) setLangState(normalise(stored));
+    // Not signed in yet / first visit: follow the phone's language (French phone → French app)
+    else if (typeof navigator !== "undefined") setLangState(normalise(navigator.language?.slice(0, 2)));
   }, []);
 
   useEffect(() => {

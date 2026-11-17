@@ -5,6 +5,8 @@ import { useSession } from "@/lib/data";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
+  // Browser-only, like /auth: avoids the hydration mismatch that broke the first screens on some phones.
+  ssr: false,
   head: () => ({
     meta: [
       { title: "MyBudget — Track spending, budgets and savings goals" },

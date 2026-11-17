@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const t = useT();
   const invalidate = useInvalidateAll();
+  const qc = useQueryClient();
   const { data: profile } = useProfile();
   const [step, setStep] = useState(0);
   const [currency, setCurrency] = useState(profile?.currency ?? DEFAULT_CURRENCY);
@@ -53,6 +55,11 @@ function Onboarding() {
         });
         if (gErr) throw gErr;
       }
+      // Update the cached profile before leaving: otherwise the home page still sees
+      // "not onboarded" in the cache and sends the user back to step 1.
+      qc.setQueryData(["profile"], (p: Record<string, unknown> | null | undefined) =>
+        p ? { ...p, currency, onboarded: true } : p,
+      );
       invalidate();
       navigate({ to: "/home", replace: true });
     } catch (err) {

@@ -137,8 +137,24 @@ export function useDeleteDetectionRule() {
 
 /** The public URL a phone automation posts notification text to. */
 export function ingestEndpoint() {
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
-  return `${origin}/api/public/detection-ingest`;
+  return `${publicOrigin()}/api/public/detection-ingest`;
+}
+
+/** Published address of the app (VITE_PUBLIC_APP_URL can override it). */
+const PUBLISHED_ORIGIN =
+  (import.meta.env["VITE_PUBLIC_APP_URL"] as string | undefined) ?? "https://warm-vault-money.lovable.app";
+
+/**
+ * Origin a phone can reach. Lovable preview addresses (preview--…, id-preview--…)
+ * are protected by the Lovable login and answer "Unauthorized" to the iPhone
+ * Shortcut, and localhost isn't reachable from the phone: use the published app instead.
+ */
+function publicOrigin() {
+  if (typeof window === "undefined") return PUBLISHED_ORIGIN;
+  const { hostname, origin } = window.location;
+  if (hostname === "localhost" || hostname === "127.0.0.1") return PUBLISHED_ORIGIN;
+  if (/^(id-)?preview(-[a-z0-9]+)?--/.test(hostname) || hostname.endsWith(".lovableproject.com")) return PUBLISHED_ORIGIN;
+  return origin;
 }
 
 export function useSaveDetectionSettings() {

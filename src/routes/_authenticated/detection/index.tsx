@@ -87,7 +87,7 @@ function DetectionSettingsPage() {
   async function sendTest() {
     setTesting(true);
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch("/api/public/detection-ingest", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({

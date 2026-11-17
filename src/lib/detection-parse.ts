@@ -211,7 +211,8 @@ export function detectProvider(text: string) {
  * Returns null for OTPs, promotions, balance-only messages or when no amount is present.
  */
 export function parseNotification(raw: string, senderHint?: string | null): ParsedNotification | null {
-  const text = stripTail((raw ?? "").replace(/\s+/g, " ").trim());
+  const full = (raw ?? "").replace(/\s+/g, " ").trim();
+  const text = stripTail(full);
   if (!text || !looksTransactional(text)) return null;
 
   const amounts: { value: number; idx: number; ctx: string }[] = [];
@@ -234,10 +235,11 @@ export function parseNotification(raw: string, senderHint?: string | null): Pars
 
   const type = detectType(text.slice(0, main.idx + 40));
   // L'opérateur vient souvent de l'expéditeur du SMS (« ECOBANK », « MoovMoney », « Mixx Togo »)
-  const provider = detectProvider(`${senderHint ?? ""} ${text}`)?.name ?? null;
+  // (on cherche aussi dans la pub de fin : « …sur l'app Mixx » est parfois la seule mention de l'opérateur)
+  const provider = detectProvider(`${senderHint ?? ""} ${full}`)?.name ?? null;
   const merchant = extractMerchant(text, type);
   const categoryHint = CATEGORY_RULES.find(([re]) => re.test(text))?.[1][0] ?? null;
-  const verb = /retrait|withdraw|cash[\s-]?out/i.test(text)
+  const verb = /retrait|retir[ée]|withdraw|cash[\s-]?out/i.test(text)
     ? "Retrait"
     : /paiement|payment|achat|purchase|pay[ée]|paid/i.test(text)
       ? "Paiement"

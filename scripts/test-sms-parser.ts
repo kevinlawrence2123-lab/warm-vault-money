@@ -19,7 +19,7 @@ type Want = null | {
   merchant?: string | null;
 };
 
-const CASES: { sender?: string; text: string; want: Want }[] = [
+export const CASES: { sender?: string; text: string; want: Want }[] = [
   // ---------- Ecobank Togo (expéditeur « ECOBANK ») ----------
   {
     sender: "ECOBANK",
@@ -78,6 +78,15 @@ const CASES: { sender?: string; text: string; want: Want }[] = [
     text: "Vous avez retire 1 900 FCFA auprès de l'agent 31995(PSDTT ETS GROUPE LAUGANE), le 14-11-26 14:17. Fees: 100 FCFA. Frais remboursés: 0 FCFA. Nouveau solde: 2 FCFA . Ref: 20615977437. Tente de gagner une voiture en cumulant un max de points sur l'app Mixx : http://bit.ly/mixxapp",
     want: { type: "expense", amount: 1900, fee: 100, balance: 2, date: "2026-11-14", provider: "Mixx", merchant: "PSDTT ETS GROUPE LAUGANE" },
   },
+  // ---------- Collés dans l'app (sans expéditeur) ----------
+  {
+    text: "Vous avez retire 1 900 FCFA auprès de l'agent 31995(PSDTT ETS GROUPE LAUGANE), le 14-11-26 14:17. Fees: 100 FCFA. Frais remboursés: 0 FCFA. Nouveau solde: 2 FCFA . Ref: 20615977437. Tente de gagner une voiture en cumulant un max de points sur l'app Mixx : http://bit.ly/mixxapp",
+    want: { type: "expense", amount: 1900, fee: 100, balance: 2, provider: "Mixx" },
+  },
+  {
+    text: "XOF 15,000.00 Dbit du ac XX106001 REFM61CAVO2632003HG RETRAIT ATM-TOTAL GALERIE TOUNTO Lome TG on 16-NOV-26. Votre solde disponible est XOF 5,009.00.",
+    want: { type: "expense", amount: 15000, balance: 5009, date: "2026-11-16", provider: "Ecobank" },
+  },
   // ---------- Autres opérateurs ----------
   {
     text: "NITA: Vous avez recu 25 000 FCFA de MOUSSA ALI le 12/11/2026. Frais: 0F. Nouveau solde: 87 500 FCFA.",
@@ -106,6 +115,7 @@ const CASES: { sender?: string; text: string; want: Want }[] = [
   },
 ];
 
+if (process.argv[1]?.includes("test-sms-parser")) {
 let failures = 0;
 for (const [i, c] of CASES.entries()) {
   const got = parseNotification(c.text, c.sender);
@@ -129,3 +139,4 @@ for (const [i, c] of CASES.entries()) {
 }
 console.log(`\n${CASES.length - failures}/${CASES.length} SMS lus correctement`);
 if (failures) process.exit(1);
+}
