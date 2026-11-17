@@ -245,7 +245,9 @@ export const Route = createFileRoute("/api/public/detection-ingest")({
               account_id: accountId,
               raw_text: text.slice(0, 500),
               external_ref: e.ref,
-              detected_at: detectedAt,
+              // Date written in the SMS when there is one (confirming uses this date),
+              // otherwise the moment the phone forwarded it.
+              detected_at: parsed.date ? `${parsed.date}T12:00:00.000Z` : detectedAt,
               transaction_id: txId,
               status: autoSave ? "confirmed" : "pending",
             })
