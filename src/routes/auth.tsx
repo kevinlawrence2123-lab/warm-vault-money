@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { Aurora, Shiny } from "@/components/app/motion";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -157,17 +158,20 @@ function AuthPage() {
           : t("auth.savePassword");
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center px-6 py-12">
-      <div className="mb-8 space-y-2">
+    <div className="relative mx-auto flex min-h-screen w-full max-w-lg flex-col justify-center overflow-hidden px-6 py-12">
+      <Aurora className="opacity-70" />
+      <div className="reveal relative mb-8 space-y-2">
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-primary" />
           <span className="text-sm font-bold tracking-[0.2em] uppercase">MyBudget</span>
         </div>
-        <h1 className="amount-xl text-4xl">{title}</h1>
+        <h1 className="amount-xl text-4xl">
+          <Shiny>{title}</Shiny>
+        </h1>
         <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
 
-      <form onSubmit={submit} className="space-y-3">
+      <form onSubmit={submit} className="reveal relative space-y-3 [--reveal-delay:120ms]">
         {mode === "signup" && (
           <Field
             label={t("auth.fullName")}

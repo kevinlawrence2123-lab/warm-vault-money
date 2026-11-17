@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
   Home,
@@ -82,20 +82,40 @@ export function TopBar({ title }: { title: string }) {
 
 export function BottomNav() {
   const t = useT();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const active = TABS.findIndex((tab) => pathname === tab.to || pathname.startsWith(`${tab.to}/`));
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg px-3 pb-3">
-      <div className="glass-button flex items-center justify-between rounded-3xl px-2 py-2">
-        {TABS.map((tab) => (
-          <Link
-            key={tab.to}
-            to={tab.to}
-            className="flex flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[10px] font-semibold text-muted-foreground transition-colors data-[status=active]:text-primary"
-            activeProps={{ className: "text-primary" }}
-          >
-            <tab.icon size={19} strokeWidth={2.2} />
-            {t(tab.labelKey as TKey)}
-          </Link>
-        ))}
+      <div className="glass-button rounded-3xl px-2 py-2">
+        <div className="relative flex items-center justify-between">
+          {/* Sliding indicator (Skiper-style animated menu) */}
+          {active >= 0 && (
+            <span
+              aria-hidden
+              className="absolute inset-y-0 left-0 rounded-2xl bg-primary/12 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+              style={{ width: `${100 / TABS.length}%`, transform: `translateX(${active * 100}%)` }}
+            >
+              <span className="gold-gradient absolute top-0 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-full" />
+            </span>
+          )}
+          {TABS.map((tab, i) => (
+            <Link
+              key={tab.to}
+              to={tab.to}
+              className={cn(
+                "relative z-10 flex flex-1 flex-col items-center gap-1 rounded-2xl py-2 text-[10px] font-semibold transition-colors duration-300",
+                i === active ? "text-primary" : "text-muted-foreground",
+              )}
+            >
+              <tab.icon
+                size={19}
+                strokeWidth={2.2}
+                className={cn("transition-transform duration-500", i === active && "-translate-y-0.5 scale-110")}
+              />
+              {t(tab.labelKey as TKey)}
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );
@@ -113,7 +133,7 @@ export function AppShell({
   return (
     <div className="mx-auto min-h-screen w-full max-w-lg bg-background">
       <TopBar title={title} />
-      <main className={cn("space-y-6 px-4 pt-2 pb-32", className)}>{children}</main>
+      <main className={cn("page-in space-y-6 px-4 pt-2 pb-32", className)}>{children}</main>
       <BottomNav />
     </div>
   );
@@ -142,7 +162,7 @@ export function PageShell({
         </GlassIconButton>
         <h1 className="truncate text-lg font-extrabold tracking-tight">{title}</h1>
       </header>
-      <main className="space-y-6 px-4 pt-2 pb-32">{children}</main>
+      <main className="page-in space-y-6 px-4 pt-2 pb-32">{children}</main>
     </div>
   );
 }

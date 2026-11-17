@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { iconFor } from "@/lib/icons";
 import { splitMoney } from "@/lib/format";
+import { useSpotlight } from "./motion";
 
 export function Card({
   children,
@@ -12,10 +13,12 @@ export function Card({
   className?: string | undefined;
   wavy?: boolean | undefined;
 }) {
+  const ref = useSpotlight<HTMLDivElement>();
   return (
     <div
+      ref={ref}
       className={cn(
-        "surface-card p-5",
+        "surface-card spotlight p-5",
         wavy && "wavy-bottom pb-10",
         className,
       )}
@@ -104,7 +107,7 @@ export function ProgressBar({
     <div className={cn("h-2 w-full overflow-hidden rounded-full bg-surface", className)}>
       <div
         className={cn(
-          "h-full rounded-full transition-all",
+          "grow-x h-full rounded-full transition-[width] duration-700",
           tone === "gold" && "gold-gradient",
           tone === "danger" && "bg-destructive",
           tone === "warning" && "bg-warning",
@@ -132,7 +135,7 @@ export function Chip({
       type="button"
       onClick={onClick}
       className={cn(
-        "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-colors",
+        "shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-300 active:scale-95",
         active
           ? "gold-gradient text-primary-foreground"
           : "bg-surface text-muted-foreground hover:text-foreground",

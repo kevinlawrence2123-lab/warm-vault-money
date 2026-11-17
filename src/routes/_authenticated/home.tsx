@@ -13,6 +13,7 @@ import {
   SectionHeader,
 } from "@/components/app/primitives";
 import { TransactionRow } from "@/components/app/TransactionRow";
+import { Aurora, Reveal, useCountUp } from "@/components/app/motion";
 import {
   balanceSeries,
   inMonth,
@@ -65,19 +66,22 @@ function HomePage() {
   const saved = Math.max(0, income - spent);
   const change = periodChange(txs, 30);
   const series = balanceSeries(accounts, txs, range);
+  const shownBalance = useCountUp(balance);
 
   return (
     <AppShell title={t("home.title")}>
+      <Reveal>
       <Card className="relative overflow-hidden p-0" wavy>
-        <div className="px-6 pt-6">
+        <Aurora />
+        <div className="relative px-6 pt-6">
           <p className="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">
             {t("home.totalBalance")}
           </p>
           <div className="mt-2 flex flex-wrap items-end gap-3">
             <Amount
-              value={balance}
+              value={shownBalance}
               currency={currency}
-              className="text-4xl text-primary"
+              className="shiny-text text-4xl"
               centsClassName="text-foreground/70"
             />
             <span
@@ -91,7 +95,7 @@ function HomePage() {
           </div>
         </div>
 
-        <div className="mt-2 h-40 w-full">
+        <div className="relative mt-2 h-40 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={series} margin={{ top: 8, right: 0, bottom: 0, left: 0 }}>
               <defs>
@@ -117,12 +121,14 @@ function HomePage() {
                 stroke="var(--color-primary)"
                 strokeWidth={2.5}
                 fill="url(#balanceFill)"
+                animationDuration={1100}
+                animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="no-scrollbar flex gap-2 overflow-x-auto px-6 pt-1 pb-2">
+        <div className="no-scrollbar relative flex gap-2 overflow-x-auto px-6 pt-1 pb-2">
           {RANGES.map((r) => (
             <Chip
               key={r}
@@ -135,13 +141,14 @@ function HomePage() {
           ))}
         </div>
       </Card>
+      </Reveal>
 
-      <div className="grid grid-cols-2 gap-3">
+      <Reveal index={1} className="grid grid-cols-2 gap-3">
         <StatCard label={t("home.spentThisMonth")} value={spent} currency={currency} tone="gold" />
         <StatCard label={t("home.savedThisMonth")} value={saved} currency={currency} />
-      </div>
+      </Reveal>
 
-      <section>
+      <Reveal as="section" index={2}>
         <SectionHeader
           title={t("home.savingsGoals")}
           action={
@@ -164,7 +171,7 @@ function HomePage() {
             }
           />
         ) : (
-          <div className="no-scrollbar -mx-4 flex gap-3 overflow-x-auto px-4 pb-1">
+          <div className="no-scrollbar snap-deck -mx-4 flex scroll-px-4 gap-3 overflow-x-auto px-4 pb-1">
             {goals.map((g) => {
               const pct = g.target_amount
                 ? (Number(g.current_amount) / Number(g.target_amount)) * 100
@@ -174,7 +181,7 @@ function HomePage() {
                   key={g.id}
                   to="/goals/$goalId"
                   params={{ goalId: g.id }}
-                  className="surface-card w-52 shrink-0 space-y-3 p-4"
+                  className="surface-card glow-border w-52 shrink-0 space-y-3 p-4"
                 >
                   <div className="flex items-center gap-3">
                     <IconBubble icon={g.icon} size="sm" />
@@ -192,9 +199,9 @@ function HomePage() {
             })}
           </div>
         )}
-      </section>
+      </Reveal>
 
-      <section>
+      <Reveal as="section" index={3}>
         <SectionHeader
           title={t("home.recentActivity")}
           action={
@@ -210,22 +217,23 @@ function HomePage() {
           />
         ) : (
           <div className="surface-card divide-y divide-border p-2">
-            {txs.slice(0, 8).map((t) => (
-              <TransactionRow
-                key={t.id}
-                tx={t}
-                category={categories.find((c) => c.id === t.category_id)}
-                currency={currency}
-              />
+            {txs.slice(0, 8).map((t, i) => (
+              <Reveal key={t.id} index={i + 4} step={45}>
+                <TransactionRow
+                  tx={t}
+                  category={categories.find((c) => c.id === t.category_id)}
+                  currency={currency}
+                />
+              </Reveal>
             ))}
           </div>
         )}
-      </section>
+      </Reveal>
 
       <Link
         to="/transactions/new"
         aria-label={t("home.addTransaction")}
-        className="gold-gradient fixed right-5 bottom-24 z-40 grid h-14 w-14 place-items-center rounded-full text-primary-foreground shadow-[var(--shadow-float)] transition-transform active:scale-95"
+        className="gold-gradient pulse-ring fixed right-5 bottom-24 z-40 grid h-14 w-14 place-items-center rounded-full text-primary-foreground transition-transform hover:rotate-90 active:scale-90"
       >
         <Plus size={26} strokeWidth={2.6} />
       </Link>
@@ -244,6 +252,7 @@ function StatCard({
   currency: string;
   tone?: "gold";
 }) {
+  const shown = useCountUp(value);
   return (
     <div
       className={`rounded-3xl p-4 ${
@@ -254,7 +263,7 @@ function StatCard({
         <p className="text-xs font-semibold opacity-80">{label}</p>
         <TrendingUp size={15} className="opacity-70" />
       </div>
-      <p className="amount-xl mt-4 text-2xl">{formatMoney(value, currency, true)}</p>
+      <p className="amount-xl mt-4 text-2xl tabular-nums">{formatMoney(Math.round(shown), currency, true)}</p>
     </div>
   );
 }

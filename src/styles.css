@@ -183,3 +183,156 @@
     black 100%
   );
 }
+
+/* ── Motion (inspired by React Bits / Skiper UI) ───────────────────────── */
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.reveal {
+  animation: reveal-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* Aurora blobs behind hero cards */
+@keyframes aurora-drift {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(18%, -12%) scale(1.15); }
+  66% { transform: translate(-12%, 10%) scale(0.92); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.aurora-blob {
+  position: absolute;
+  width: 70%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  filter: blur(48px);
+  opacity: 0.32;
+  animation: aurora-drift 16s ease-in-out infinite;
+}
+.aurora-a { top: -35%; left: -20%; background: oklch(0.83 0.16 85); }
+.aurora-b { top: -20%; right: -30%; background: oklch(0.7 0.14 40); animation-duration: 21s; animation-delay: -6s; opacity: 0.22; }
+.aurora-c { bottom: -45%; left: 20%; background: oklch(0.72 0.1 160); animation-duration: 26s; animation-delay: -11s; opacity: 0.16; }
+
+/* Light that follows the finger */
+@utility spotlight {
+  position: relative;
+  isolation: isolate;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: var(--spot-o, 0);
+    transition: opacity 0.35s ease;
+    background: radial-gradient(
+      220px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+      oklch(0.87 0.15 92 / 14%),
+      transparent 70%
+    );
+  }
+}
+
+/* Gold text with a sweeping shine */
+@keyframes shine {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+.shiny-text {
+  background: linear-gradient(
+      100deg,
+      var(--primary) 35%,
+      oklch(0.98 0.05 95) 50%,
+      var(--primary) 65%
+    );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 4.5s linear infinite;
+}
+
+/* Thin animated gold border (React Bits "StarBorder") */
+@keyframes border-spin {
+  to { --border-angle: 360deg; }
+}
+@property --border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@utility glow-border {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    conic-gradient(
+        from var(--border-angle),
+        transparent 0deg,
+        oklch(0.87 0.15 92 / 70%) 40deg,
+        transparent 110deg,
+        transparent 360deg
+      )
+      border-box;
+  animation: border-spin 6s linear infinite;
+}
+
+/* Progress bars grow in */
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.grow-x {
+  transform-origin: left;
+  animation: grow-x 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Floating add button: soft pulse ring */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 oklch(0.83 0.16 85 / 45%); }
+  80%, 100% { box-shadow: 0 0 0 16px oklch(0.83 0.16 85 / 0%); }
+}
+.pulse-ring {
+  animation: pulse-ring 2.6s ease-out infinite;
+}
+
+/* Skiper-style carousel: cards scale as they snap */
+.snap-deck {
+  scroll-snap-type: x mandatory;
+}
+.snap-deck > * {
+  scroll-snap-align: start;
+  transition: transform 0.3s ease;
+}
+.snap-deck > *:active {
+  transform: scale(0.97);
+}
+
+/* Page enter */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.page-in {
+  animation: page-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .aurora-blob, .shiny-text, .grow-x, .pulse-ring, .page-in {
+    animation: none !important;
+  }
+  .shiny-text { color: var(--primary); }
+  [class*="glow-border"] { animation: none !important; }
+}
