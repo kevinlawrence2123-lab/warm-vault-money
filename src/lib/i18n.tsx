@@ -308,6 +308,40 @@ const en = {
   "detections.paste.duplicates": "{n} already imported, skipped",
   "detections.paste.nothing": "No transaction found in this text",
   "detections.openInbox": "Detected transactions",
+  "iphone2.intro":
+    "iPhone apps can't read your SMS, but the Shortcuts app can react when an SMS arrives and send it to MyBudget in the background. MyBudget then reads the amount, direction, fees, balance and date, and puts the transaction in your review inbox (or saves it directly if automatic saving is on).",
+  "iphone2.yourValues": "Your personal values",
+  "iphone2.url": "Web address (URL)",
+  "iphone2.token": "Secret key (tap to show)",
+  "iphone2.noToken": "Turn on automatic detection in the previous screen to get your secret key.",
+  "iphone2.copy": "Copy",
+  "iphone2.copied": "Copied",
+  "iphone2.s1.title": "Create a message automation",
+  "iphone2.s1.body":
+    "Open Shortcuts › Automation tab › + › Message. Under “Sender”, choose ECOBANK. Select “Run Immediately” and turn off “Notify When Run”, then Next › New Blank Automation.",
+  "iphone2.s2.title": "Add “Get Contents of URL”",
+  "iphone2.s2.body":
+    "Search for the action “Get Contents of URL”. Paste your URL. Tap the arrow › Method: POST › Request Body: JSON.",
+  "iphone2.s3.title": "Fill in the 3 fields",
+  "iphone2.s3.body":
+    "Add 3 Text fields:\n• token → paste your secret key\n• text → insert the variable “Shortcut Input” › Content (the SMS text)\n• sender → type ECOBANK",
+  "iphone2.s4.title": "Repeat for each sender",
+  "iphone2.s4.body":
+    "Create the same automation for MoovMoney and Mixx Togo (only change the sender field). Tip: once the first one works, duplicate it.",
+  "iphone2.s5.title": "Test with a real SMS",
+  "iphone2.s5.body":
+    "Use the test button below to check your key, then wait for your next SMS (or forward an old one to yourself). The transaction appears in Detected transactions within a few seconds.",
+  "iphone2.s6.title": "Choose the account for each operator",
+  "iphone2.s6.body":
+    "Name your accounts after the operator (e.g. “Ecobank”, “Moov Money”, “Mixx”): each SMS goes to the account with the matching name. Otherwise the default account of the previous screen is used.",
+  "iphone2.ai.title": "Optional: Apple Intelligence",
+  "iphone2.ai.body":
+    "MyBudget already reads Ecobank, Moov Money and Mixx messages on its own. If an operator changes its format, you can add a safety net: before “Get Contents of URL”, add the action “Use Model” (On-Device) with the prompt below followed by the SMS content, then add the fields ai_amount, ai_type and ai_merchant from its answer. MyBudget only uses them if it can't read the SMS itself, and only if the amount really appears in the message.",
+  "iphone2.ai.prompt": "Prompt for “Use Model”",
+  "iphone2.test": "Test my key (nothing is saved)",
+  "iphone2.testOk": "Key OK — sample SMS read as {type}{amount} {provider}",
+  "iphone2.testDisabled": "Automatic detection is off: turn it on in the previous screen",
+  "iphone2.testNote": "The test sends a sample Moov Money SMS in “dry run” mode: nothing is added to your accounts.",
 };
 
 export type TKey = keyof typeof en;
@@ -608,6 +642,40 @@ const fr: Partial<Record<TKey, string>> = {
   "detections.paste.duplicates": "{n} déjà importée(s), ignorée(s)",
   "detections.paste.nothing": "Aucune opération trouvée dans ce texte",
   "detections.openInbox": "Opérations détectées",
+  "iphone2.intro":
+    "Une app iPhone ne peut pas lire vos SMS, mais l'app Raccourcis peut réagir à l'arrivée d'un SMS et l'envoyer à MyBudget en arrière-plan. MyBudget lit alors le montant, le sens, les frais, le solde et la date, et place l'opération dans vos détections à valider (ou l'enregistre directement si l'enregistrement automatique est activé).",
+  "iphone2.yourValues": "Vos valeurs personnelles",
+  "iphone2.url": "Adresse web (URL)",
+  "iphone2.token": "Clé secrète (touchez pour afficher)",
+  "iphone2.noToken": "Activez la détection automatique sur l'écran précédent pour obtenir votre clé secrète.",
+  "iphone2.copy": "Copier",
+  "iphone2.copied": "Copié",
+  "iphone2.s1.title": "Créez une automatisation « Message »",
+  "iphone2.s1.body":
+    "Ouvrez Raccourcis › onglet Automatisation › + › Message. Dans « Expéditeur », choisissez ECOBANK. Cochez « Exécuter immédiatement » et désactivez « M'avertir lors de l'exécution », puis Suivant › Nouvelle automatisation vide.",
+  "iphone2.s2.title": "Ajoutez « Obtenir le contenu de l'URL »",
+  "iphone2.s2.body":
+    "Cherchez l'action « Obtenir le contenu de l'URL ». Collez votre URL. Touchez la flèche › Méthode : POST › Corps de la requête : JSON.",
+  "iphone2.s3.title": "Remplissez les 3 champs",
+  "iphone2.s3.body":
+    "Ajoutez 3 champs de type Texte :\n• token → collez votre clé secrète\n• text → insérez la variable « Entrée du raccourci » › Contenu (le texte du SMS)\n• sender → tapez ECOBANK",
+  "iphone2.s4.title": "Répétez pour chaque expéditeur",
+  "iphone2.s4.body":
+    "Créez la même automatisation pour MoovMoney et Mixx Togo (changez seulement le champ sender). Astuce : une fois la première validée, dupliquez-la.",
+  "iphone2.s5.title": "Testez avec un vrai SMS",
+  "iphone2.s5.body":
+    "Utilisez le bouton de test ci-dessous pour vérifier votre clé, puis attendez votre prochain SMS (ou transférez-vous un ancien). L'opération apparaît dans « Opérations détectées » en quelques secondes.",
+  "iphone2.s6.title": "Choisissez le compte de chaque opérateur",
+  "iphone2.s6.body":
+    "Nommez vos comptes comme l'opérateur (ex. « Ecobank », « Moov Money », « Mixx ») : chaque SMS va dans le compte au nom correspondant. Sinon, c'est le compte par défaut de l'écran précédent qui est utilisé.",
+  "iphone2.ai.title": "En option : Apple Intelligence",
+  "iphone2.ai.body":
+    "MyBudget lit déjà seul les SMS Ecobank, Moov Money et Mixx. Si un opérateur change son format, vous pouvez ajouter un filet de sécurité : avant « Obtenir le contenu de l'URL », ajoutez l'action « Utiliser un modèle » (Sur l'appareil) avec la consigne ci-dessous suivie du contenu du SMS, puis ajoutez les champs ai_amount, ai_type et ai_merchant à partir de sa réponse. MyBudget ne s'en sert que s'il n'arrive pas à lire le SMS lui-même, et seulement si le montant figure vraiment dans le message.",
+  "iphone2.ai.prompt": "Consigne pour « Utiliser un modèle »",
+  "iphone2.test": "Tester ma clé (rien n'est enregistré)",
+  "iphone2.testOk": "Clé valide — SMS d'exemple lu : {type}{amount} {provider}",
+  "iphone2.testDisabled": "La détection automatique est désactivée : activez-la sur l'écran précédent",
+  "iphone2.testNote": "Le test envoie un SMS Moov Money d'exemple en mode « essai » : rien n'est ajouté à vos comptes.",
 };
 
 /**

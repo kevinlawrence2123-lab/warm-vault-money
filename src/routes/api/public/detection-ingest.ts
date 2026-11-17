@@ -2,21 +2,72 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 import { z } from "zod";
 import {
+  detectProvider,
   isMutedMessage,
+  looksTransactional,
   matchAccountByProvider,
   matchCategoryHint,
+  parseAmount,
   parseNotification,
   resolveSourceKey,
+  type ParsedNotification,
 } from "@/lib/detection-parse";
+
+// Shortcuts sends every field as text, so numbers are accepted as strings too.
+const loose = z.union([z.string().max(60), z.number()]).optional();
 
 const payloadSchema = z.object({
   token: z.string().min(20).max(200),
   text: z.string().min(1).max(2000),
+  /** App or SMS sender name (Shortcuts: "Sender" of the message) */
   app: z.string().max(120).optional(),
+  sender: z.string().max(120).optional(),
   title: z.string().max(200).optional(),
   reference: z.string().max(120).optional(),
   received_at: z.string().max(40).optional(),
+  /**
+   * Optional values extracted on the phone by Apple Intelligence ("Use Model" action).
+   * Only used when the built-in parser cannot read the message.
+   */
+  ai_amount: loose,
+  ai_type: z.string().max(20).optional(),
+  ai_merchant: z.string().max(80).optional(),
+  /** Check the token and see what would be read, without saving anything. */
+  dry_run: z.union([z.boolean(), z.string()]).optional(),
 });
+
+/**
+ * Fallback built from the on-device AI answer. Accepted only for transaction-looking
+ * messages, and only if the amount really appears in the SMS (no invented amounts).
+ */
+function fromAi(
+  text: string,
+  sender: string,
+  ai: { amount?: string | number | undefined; type?: string | undefined; merchant?: string | undefined },
+): ParsedNotification | null {
+  if (ai.amount === undefined || !looksTransactional(text)) return null;
+  const amount = typeof ai.amount === "number" ? ai.amount : parseAmount(String(ai.amount).replace(/[^\d.,\s]/g, ""));
+  if (!amount || amount <= 0) return null;
+  const digits = text.replace(/\D/g, "");
+  if (!digits.includes(String(Math.trunc(amount)))) return null;
+  const type = /income|cr[ée]dit|re[çc]u|entr|in\b/i.test(ai.type ?? "") ? "income" : "expense";
+  const merchant = ai.merchant?.trim() || null;
+  const provider = detectProvider(`${sender} ${text}`)?.name ?? null;
+  return {
+    amount,
+    type,
+    merchant,
+    balance: null,
+    reference: null,
+    fee: 0,
+    provider,
+    date: null,
+    categoryHint: null,
+    label: [type === "income" ? "Crédit" : "Débit", merchant ? `· ${merchant}` : null, provider ? `(${provider})` : null]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -42,7 +93,8 @@ export const Route = createFileRoute("/api/public/detection-ingest")({
 
         const parsedBody = payloadSchema.safeParse(body);
         if (!parsedBody.success) return json({ error: "Invalid payload" }, 400);
-        const { token, text, app, title, reference, received_at } = parsedBody.data;
+        const { token, text, title, reference, received_at, ai_amount, ai_type, ai_merchant } = parsedBody.data;
+        const app = parsedBody.data.app ?? parsedBody.data.sender;
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -70,8 +122,24 @@ export const Route = createFileRoute("/api/public/detection-ingest")({
         if (source && !source.enabled) return json({ status: "source_disabled" }, 202);
 
         const haystack = `${title ?? ""} ${text}`;
-        const parsed = parseNotification(haystack);
+        const parsed =
+          parseNotification(haystack, app) ??
+          fromAi(haystack, app ?? "", { amount: ai_amount, type: ai_type, merchant: ai_merchant });
+        const dryRun = parsedBody.data.dry_run === true || parsedBody.data.dry_run === "true";
         if (!parsed) return json({ status: "no_amount_found" }, 202);
+        if (dryRun) {
+          return json({
+            status: "dry_run",
+            amount: parsed.amount,
+            type: parsed.type,
+            fee: parsed.fee,
+            balance: parsed.balance,
+            provider: parsed.provider,
+            merchant: parsed.merchant,
+            date: parsed.date,
+            source_key: sourceKey,
+          });
+        }
 
         const sourceLabel = app ?? title ?? parsed.provider ?? "Bank app";
 
