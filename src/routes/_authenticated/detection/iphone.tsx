@@ -7,8 +7,12 @@ import { Card } from "@/components/app/primitives";
 import { useT, type TKey } from "@/lib/i18n";
 import { ingestEndpoint, useDetectionSettings } from "@/lib/detection";
 
-/** SMS senders seen on the user's iPhone in Togo (one automation per sender). */
-const SENDERS = ["ECOBANK", "MoovMoney", "Mixx Togo"];
+/**
+ * Bank SMS come from alphanumeric senders (robots) that the iPhone can't pick as contacts.
+ * Every Ecobank / Moov Money / Mixx transaction SMS contains "solde", so one
+ * "Message Contains" automation catches them all; the operator is read from the text.
+ */
+const TRIGGER_WORD = "solde";
 
 /** Prompt for the optional Apple Intelligence "Use Model" action. */
 const AI_PROMPT =
@@ -81,7 +85,6 @@ function IphoneSetupPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           token,
-          sender: "MoovMoney",
           dry_run: true,
           text: "Transfert recu. Montant: 5 000,00 FCFA Expéditeur: 22890000000 Date: 21/09/2026 19:58:44. Nouveau solde Moov Money: 5 096,87 FCFA. Txn ID: 040886159476",
         }),
@@ -129,13 +132,7 @@ function IphoneSetupPage() {
         ) : (
           <p className="text-xs text-muted-foreground">{t("iphone2.noToken")}</p>
         )}
-        <div className="flex flex-wrap gap-2 pt-1">
-          {SENDERS.map((s) => (
-            <span key={s} className="rounded-full bg-surface px-3 py-1 text-xs font-semibold">
-              {s}
-            </span>
-          ))}
-        </div>
+        <CopyRow label={t("iphone2.keyword")} value={TRIGGER_WORD} />
       </Card>
 
       <ol className="space-y-3">

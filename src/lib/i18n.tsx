@@ -334,18 +334,19 @@ const en = {
   "iphone2.noToken": "Turn on automatic detection in the previous screen to get your secret key.",
   "iphone2.copy": "Copy",
   "iphone2.copied": "Copied",
+  "iphone2.keyword": "Word for “Message Contains”",
   "iphone2.s1.title": "Create a message automation",
   "iphone2.s1.body":
-    "Open Shortcuts › Automation tab › + › Message. Under “Sender”, choose ECOBANK. Select “Run Immediately” and turn off “Notify When Run”, then Next › New Blank Automation.",
+    "Open Shortcuts › Automation tab › + › Message. Leave “Sender” empty (banks send from robots, not contacts). Tap “Message Contains” and type: solde. Select “Run Immediately” and turn off “Notify When Run”, then Next › New Blank Automation.",
   "iphone2.s2.title": "Add “Get Contents of URL”",
   "iphone2.s2.body":
     "Search for the action “Get Contents of URL”. Paste your URL. Tap the arrow › Method: POST › Request Body: JSON.",
-  "iphone2.s3.title": "Fill in the 3 fields",
+  "iphone2.s3.title": "Fill in the 2 fields",
   "iphone2.s3.body":
-    "Add 3 Text fields:\n• token → paste your secret key\n• text → insert the variable “Shortcut Input” › Content (the SMS text)\n• sender → type ECOBANK",
-  "iphone2.s4.title": "Repeat for each sender",
+    "Add 2 Text fields:\n• token → paste your secret key\n• text → insert the variable “Shortcut Input” › Content (the SMS text)\nThat's it: MyBudget recognises Ecobank, Moov Money and Mixx from the text itself.",
+  "iphone2.s4.title": "One automation is enough",
   "iphone2.s4.body":
-    "Create the same automation for MoovMoney and Mixx Togo (only change the sender field). Tip: once the first one works, duplicate it.",
+    "Every Ecobank, Moov Money and Mixx transaction SMS contains the word “solde”, so this single automation catches all three. Other SMS with no amount are ignored. No “Message Contains” option? Update the iPhone to iOS 17 or later.",
   "iphone2.s5.title": "Test with a real SMS",
   "iphone2.s5.body":
     "Use the test button below to check your key, then wait for your next SMS (or forward an old one to yourself). The transaction appears in Detected transactions within a few seconds.",
@@ -686,18 +687,19 @@ const fr: Partial<Record<TKey, string>> = {
   "iphone2.noToken": "Activez la détection automatique sur l'écran précédent pour obtenir votre clé secrète.",
   "iphone2.copy": "Copier",
   "iphone2.copied": "Copié",
+  "iphone2.keyword": "Mot pour « Le message contient »",
   "iphone2.s1.title": "Créez une automatisation « Message »",
   "iphone2.s1.body":
-    "Ouvrez Raccourcis › onglet Automatisation › + › Message. Dans « Expéditeur », choisissez ECOBANK. Cochez « Exécuter immédiatement » et désactivez « M'avertir lors de l'exécution », puis Suivant › Nouvelle automatisation vide.",
+    "Ouvrez Raccourcis › onglet Automatisation › + › Message. Laissez « Expéditeur » vide (les banques envoient depuis des robots, pas des contacts). Touchez « Le message contient » et tapez : solde. Cochez « Exécuter immédiatement » et désactivez « M'avertir lors de l'exécution », puis Suivant › Nouvelle automatisation vide.",
   "iphone2.s2.title": "Ajoutez « Obtenir le contenu de l'URL »",
   "iphone2.s2.body":
     "Cherchez l'action « Obtenir le contenu de l'URL ». Collez votre URL. Touchez la flèche › Méthode : POST › Corps de la requête : JSON.",
-  "iphone2.s3.title": "Remplissez les 3 champs",
+  "iphone2.s3.title": "Remplissez les 2 champs",
   "iphone2.s3.body":
-    "Ajoutez 3 champs de type Texte :\n• token → collez votre clé secrète\n• text → insérez la variable « Entrée du raccourci » › Contenu (le texte du SMS)\n• sender → tapez ECOBANK",
-  "iphone2.s4.title": "Répétez pour chaque expéditeur",
+    "Ajoutez 2 champs de type Texte :\n• token → collez votre clé secrète\n• text → insérez la variable « Entrée du raccourci » › Contenu (le texte du SMS)\nC'est tout : MyBudget reconnaît Ecobank, Moov Money et Mixx à partir du texte.",
+  "iphone2.s4.title": "Une seule automatisation suffit",
   "iphone2.s4.body":
-    "Créez la même automatisation pour MoovMoney et Mixx Togo (changez seulement le champ sender). Astuce : une fois la première validée, dupliquez-la.",
+    "Tous les SMS d'opération Ecobank, Moov Money et Mixx contiennent le mot « solde » : cette automatisation unique les attrape tous les trois. Les autres SMS sans montant sont ignorés. Pas d'option « Le message contient » ? Mettez l'iPhone à jour (iOS 17 ou plus).",
   "iphone2.s5.title": "Testez avec un vrai SMS",
   "iphone2.s5.body":
     "Utilisez le bouton de test ci-dessous pour vérifier votre clé, puis attendez votre prochain SMS (ou transférez-vous un ancien). L'opération apparaît dans « Opérations détectées » en quelques secondes.",
