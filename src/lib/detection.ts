@@ -205,6 +205,118 @@ export function useResolveDetection() {
         .eq("id", detection.id);
       if (error) throw error;
     },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["detected-transactions"] });
+      qc.invalidateQueries({ queryKey: ["detection-muted"] });
+    },
+  });
+}
+
+export function useMutedPatterns() {
+  return useQuery({
+    queryKey: ["detection-muted"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("detection_muted_patterns")
+        .select("pattern");
+      if (error) throw error;
+      return (data ?? []).map((m) => m.pattern as string);
+    },
+  });
+}
+
+/** Stable short hash used as external_ref when the SMS carries no operator reference. */
+function messageRef(text: string) {
+  const s = text.replace(/\s+/g, " ").trim().toLowerCase();
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return `sms_${h.toString(36)}_${s.length.toString(36)}`;
+}
+
+export interface ImportSummary {
+  added: number;
+  duplicates: number;
+  skipped: number;
+}
+
+/**
+ * Imports pasted or shared SMS into the review inbox (status "pending"):
+ * parses each message, applies "always ignore" patterns and keyword rules,
+ * picks the account named after the operator, and records the fee as a
+ * separate expense so balances stay exact. Duplicates are skipped.
+ */
+export function useImportMessages() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      messages: string[];
+      accounts: { id: string; name: string }[];
+      categories: { id: string; name: string; type: string }[];
+      rules: DetectionRule[];
+      muted: string[];
+      defaultAccountId: string | null;
+    }): Promise<ImportSummary> => {
+      const {
+        parseNotification,
+        resolveSourceKey,
+        isMutedMessage,
+        matchAccountByProvider,
+        matchCategoryHint,
+      } = await import("./detection-parse");
+      const user_id = await uid();
+      if (!user_id) throw new Error("Not signed in");
+      const summary: ImportSummary = { added: 0, duplicates: 0, skipped: 0 };
+
+      for (const raw of input.messages) {
+        const text = raw.trim();
+        const parsed = parseNotification(text);
+        if (!parsed || isMutedMessage(text, input.muted)) {
+          summary.skipped++;
+          continue;
+        }
+        const sourceKey = resolveSourceKey(text);
+        const lower = text.toLowerCase();
+        const rule = input.rules.find((r) => r.keyword && lower.includes(r.keyword.toLowerCase()));
+        const category_id =
+          rule?.category_id ?? matchCategoryHint(parsed.categoryHint, parsed.type, input.categories)?.id ?? null;
+        const account_id =
+          matchAccountByProvider(parsed.provider, input.accounts)?.id ?? input.defaultAccountId;
+        const ref = parsed.reference
+          ? `ref_${sourceKey}_${parsed.reference.toLowerCase()}`
+          : messageRef(text);
+        const detected_at = parsed.date ? new Date(`${parsed.date}T12:00:00`).toISOString() : new Date().toISOString();
+        const app_name = parsed.provider ?? "SMS";
+
+        const rows = [
+          { amount: parsed.amount, type: parsed.type, category_id, merchant: parsed.label || parsed.merchant, external_ref: ref },
+          ...(parsed.fee > 0
+            ? [{ amount: parsed.fee, type: "expense" as const, category_id: null, merchant: `Frais · ${parsed.label || app_name}`, external_ref: `${ref}_fee` }]
+            : []),
+        ];
+        for (const [i, row] of rows.entries()) {
+          const { error } = await supabase.from("detected_transactions").insert({
+            user_id,
+            source_key: sourceKey,
+            app_name,
+            account_id,
+            raw_text: text.slice(0, 500),
+            detected_at,
+            status: "pending",
+            ...row,
+          });
+          if (error) {
+            // Unique (user_id, external_ref): this SMS was already imported
+            if (error.code === "23505") {
+              if (i === 0) summary.duplicates++;
+              break;
+            }
+            throw error;
+          }
+          if (i === 0) summary.added++;
+        }
+      }
+      return summary;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["detected-transactions"] }),
   });
 }

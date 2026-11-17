@@ -1,7 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 import { z } from "zod";
-import { parseNotification, resolveSourceKey } from "@/lib/detection-parse";
+import {
+  isMutedMessage,
+  matchAccountByProvider,
+  matchCategoryHint,
+  parseNotification,
+  resolveSourceKey,
+} from "@/lib/detection-parse";
 
 const payloadSchema = z.object({
   token: z.string().min(20).max(200),
@@ -52,8 +58,8 @@ export const Route = createFileRoute("/api/public/detection-ingest")({
         if (!settings.enabled) return json({ status: "detection_disabled" }, 202);
 
         const userId = settings.user_id;
-        const sourceLabel = app ?? title ?? "Bank app";
-        const sourceKey = resolveSourceKey(`${app ?? ""} ${title ?? ""}`);
+        // The operator is often only in the message body (SMS from "NITA", "AMANA"…)
+        const sourceKey = resolveSourceKey(`${app ?? ""} ${title ?? ""} ${text}`);
 
         const { data: source } = await supabaseAdmin
           .from("detection_sources")
@@ -67,15 +73,16 @@ export const Route = createFileRoute("/api/public/detection-ingest")({
         const parsed = parseNotification(haystack);
         if (!parsed) return json({ status: "no_amount_found" }, 202);
 
+        const sourceLabel = app ?? title ?? parsed.provider ?? "Bank app";
+
         const { data: muted = [] } = await supabaseAdmin
           .from("detection_muted_patterns")
           .select("pattern")
-          .eq("user_id", userId)
-          .eq("source_key", sourceKey);
-        const shape = normalise(haystack);
-        if ((muted ?? []).some((m) => shape === normalise(m.pattern ?? ""))) {
+          .eq("user_id", userId);
+        if (isMutedMessage(haystack, (muted ?? []).map((m) => m.pattern ?? ""))) {
           return json({ status: "muted" }, 202);
         }
+        const shape = normalise(haystack);
 
         const externalRef =
           reference ??
@@ -108,49 +115,80 @@ export const Route = createFileRoute("/api/public/detection-ingest")({
           const d = new Date(received_at);
           return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
         })();
+        // Prefer the date written in the SMS (messages forwarded late keep their real date)
+        const txDate = parsed.date ?? detectedAt.slice(0, 10);
+
+        // Account: one named after the operator ("Nita" account for a Nita SMS), else the default one
+        const [{ data: accounts = [] }, { data: categories = [] }] = await Promise.all([
+          supabaseAdmin.from("accounts").select("id, name").eq("user_id", userId),
+          supabaseAdmin.from("categories").select("id, name, type").eq("user_id", userId),
+        ]);
+        const accountId =
+          matchAccountByProvider(parsed.provider, accounts ?? [])?.id ?? settings.default_account_id;
+        const categoryId =
+          rule?.category_id ?? matchCategoryHint(parsed.categoryHint, parsed.type, categories ?? [])?.id ?? null;
 
         const autoSave = Boolean(settings.auto_save || rule?.auto_confirm);
-        let transactionId: string | null = null;
+        const paymentMethod = sourceKey === "bank" ? "card" : "mobile_money";
+        const label = parsed.label || parsed.merchant || sourceLabel;
 
-        if (autoSave) {
-          const { data: tx, error: txError } = await supabaseAdmin
-            .from("transactions")
+        // One entry for the transaction, plus one for the fee when the SMS mentions one,
+        // so that the account balance stays exact.
+        const entries = [
+          { amount: parsed.amount, type: parsed.type, note: label, category: categoryId, ref: externalRef, merchant: parsed.merchant },
+          ...(parsed.fee > 0
+            ? [{ amount: parsed.fee, type: "expense" as const, note: `Frais · ${label}`, category: null, ref: `${externalRef}_fee`, merchant: parsed.merchant }]
+            : []),
+        ];
+
+        let transactionId: string | null = null;
+        let detectionId: string | null = null;
+        for (const [i, e] of entries.entries()) {
+          let txId: string | null = null;
+          if (autoSave) {
+            const { data: tx, error: txError } = await supabaseAdmin
+              .from("transactions")
+              .insert({
+                user_id: userId,
+                account_id: accountId,
+                category_id: e.category,
+                amount: e.amount,
+                type: e.type,
+                date: txDate,
+                note: e.note,
+                payment_method: paymentMethod,
+              })
+              .select("id")
+              .single();
+            if (txError) return json({ error: "Could not save transaction" }, 500);
+            txId = tx?.id ?? null;
+          }
+
+          const { data: detection, error } = await supabaseAdmin
+            .from("detected_transactions")
             .insert({
               user_id: userId,
-              account_id: settings.default_account_id,
-              category_id: rule?.category_id ?? null,
-              amount: parsed.amount,
-              type: parsed.type,
-              date: detectedAt.slice(0, 10),
-              note: parsed.merchant ?? sourceLabel,
-              payment_method: sourceKey === "bank" ? "card" : "mobile_money",
+              source_key: sourceKey,
+              app_name: sourceLabel,
+              amount: e.amount,
+              type: e.type,
+              category_id: e.category,
+              merchant: i === 0 ? e.merchant : `Frais · ${e.merchant ?? sourceLabel}`,
+              account_id: accountId,
+              raw_text: text.slice(0, 500),
+              external_ref: e.ref,
+              detected_at: detectedAt,
+              transaction_id: txId,
+              status: autoSave ? "confirmed" : "pending",
             })
             .select("id")
             .single();
-          if (txError) return json({ error: "Could not save transaction" }, 500);
-          transactionId = tx?.id ?? null;
+          if (error) return json({ error: "Could not save detection" }, 500);
+          if (i === 0) {
+            transactionId = txId;
+            detectionId = detection?.id ?? null;
+          }
         }
-
-        const { data: detection, error } = await supabaseAdmin
-          .from("detected_transactions")
-          .insert({
-            user_id: userId,
-            source_key: sourceKey,
-            app_name: sourceLabel,
-            amount: parsed.amount,
-            type: parsed.type,
-            category_id: rule?.category_id ?? null,
-            merchant: parsed.merchant,
-            account_id: settings.default_account_id,
-            raw_text: text.slice(0, 500),
-            external_ref: externalRef,
-            detected_at: detectedAt,
-            transaction_id: transactionId,
-            status: autoSave ? "confirmed" : "pending",
-          })
-          .select("id")
-          .single();
-        if (error) return json({ error: "Could not save detection" }, 500);
 
         await supabaseAdmin
           .from("detection_settings")
@@ -159,11 +197,14 @@ export const Route = createFileRoute("/api/public/detection-ingest")({
 
         return json({
           status: autoSave ? "saved" : "pending_review",
-          detection_id: detection?.id ?? null,
+          detection_id: detectionId,
           transaction_id: transactionId,
           amount: parsed.amount,
+          fee: parsed.fee,
           type: parsed.type,
           merchant: parsed.merchant,
+          provider: parsed.provider,
+          date: txDate,
         });
       },
     },

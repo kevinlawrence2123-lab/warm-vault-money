@@ -9,6 +9,11 @@ interface QuickAddSearch {
   account?: string;
   note?: string;
   detection?: string;
+  /** Category / account ids (used when confirming a detection) */
+  category?: string;
+  accountId?: string;
+  /** YYYY-MM-DD */
+  date?: string;
 }
 
 export const Route = createFileRoute("/_authenticated/transactions/new")({
@@ -16,12 +21,16 @@ export const Route = createFileRoute("/_authenticated/transactions/new")({
     const str = (v: unknown) => (typeof v === "string" && v.trim() ? v : undefined);
     const amount = str(search['amount'])?.replace(/[^0-9.]/g, "");
     const type = search['type'] === "income" ? "income" : str(search['type']) ? "expense" : undefined;
+    const date = str(search['date']);
     return {
       ...(amount ? { amount } : {}),
       ...(type ? { type } : {}),
       ...(str(search['account']) ? { account: String(search['account']) } : {}),
       ...(str(search['note']) ? { note: String(search['note']) } : {}),
       ...(str(search['detection']) ? { detection: String(search['detection']) } : {}),
+      ...(str(search['category']) ? { category: String(search['category']) } : {}),
+      ...(str(search['accountId']) ? { accountId: String(search['accountId']) } : {}),
+      ...(date && /^\d{4}-\d{2}-\d{2}$/.test(date) ? { date } : {}),
     };
   },
   head: () => ({
@@ -54,6 +63,9 @@ function NewTransaction() {
           accountName: search.account,
           note: search.note,
           detectionId: search.detection,
+          categoryId: search.category,
+          accountId: search.accountId,
+          date: search.date,
         }}
       />
     </PageShell>

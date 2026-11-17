@@ -298,6 +298,16 @@ const en = {
   "detection.rules.none": "No rules yet.",
   "detection.rules.needKeyword": "Enter a keyword",
   "detections.autoSaved": "Saved automatically",
+  "detections.paste.title": "Import from my SMS",
+  "detections.paste.desc":
+    "Paste one or more SMS from your bank, Nita, Amana, Airtel, Moov, Orange Money, Wave… MyBudget finds the amount, direction, fees and date. Leave a blank line between two messages.",
+  "detections.paste.placeholder": "e.g. NITA: Vous avez recu 25 000 FCFA de MOUSSA ALI. Nouveau solde: 87 500 FCFA.",
+  "detections.paste.clipboard": "Paste",
+  "detections.paste.analyse": "Analyse",
+  "detections.paste.added": "{n} detection(s) added for review",
+  "detections.paste.duplicates": "{n} already imported, skipped",
+  "detections.paste.nothing": "No transaction found in this text",
+  "detections.openInbox": "Detected transactions",
 };
 
 export type TKey = keyof typeof en;
@@ -588,6 +598,16 @@ const fr: Partial<Record<TKey, string>> = {
   "detection.rules.none": "Aucune règle pour l'instant.",
   "detection.rules.needKeyword": "Saisissez un mot-clé",
   "detections.autoSaved": "Enregistré automatiquement",
+  "detections.paste.title": "Importer depuis mes SMS",
+  "detections.paste.desc":
+    "Collez un ou plusieurs SMS de votre banque, Nita, Amana, Airtel, Moov, Orange Money, Wave… MyBudget repère le montant, le sens, les frais et la date. Laissez une ligne vide entre deux messages.",
+  "detections.paste.placeholder": "Ex. NITA: Vous avez recu 25 000 FCFA de MOUSSA ALI. Nouveau solde: 87 500 FCFA.",
+  "detections.paste.clipboard": "Coller",
+  "detections.paste.analyse": "Analyser",
+  "detections.paste.added": "{n} opération(s) détectée(s) à valider",
+  "detections.paste.duplicates": "{n} déjà importée(s), ignorée(s)",
+  "detections.paste.nothing": "Aucune opération trouvée dans ce texte",
+  "detections.openInbox": "Opérations détectées",
 };
 
 /**

@@ -21,6 +21,9 @@ export interface TransactionPrefill {
   accountName?: string | undefined;
   note?: string | undefined;
   detectionId?: string | undefined;
+  categoryId?: string | undefined;
+  accountId?: string | undefined;
+  date?: string | undefined;
 }
 
 export function TransactionForm({
@@ -43,9 +46,18 @@ export function TransactionForm({
   const [amount, setAmount] = useState(
     existing ? String(existing.amount) : (prefill?.amount ?? ""),
   );
-  const [categoryId, setCategoryId] = useState<string | null>(existing?.category_id ?? null);
-  const [accountId, setAccountId] = useState<string | null>(existing?.account_id ?? null);
-  const [date, setDate] = useState(existing?.date ?? new Date().toISOString().slice(0, 10));
+  const [categoryId, setCategoryId] = useState<string | null>(
+    existing?.category_id ?? prefill?.categoryId ?? null,
+  );
+  const [accountId, setAccountId] = useState<string | null>(
+    existing?.account_id ?? prefill?.accountId ?? null,
+  );
+  const [date, setDate] = useState(
+    existing?.date ??
+      (prefill?.date && /^\d{4}-\d{2}-\d{2}$/.test(prefill.date)
+        ? prefill.date
+        : new Date().toISOString().slice(0, 10)),
+  );
   const [method, setMethod] = useState(existing?.payment_method ?? "card");
   const [note, setNote] = useState(existing?.note ?? prefill?.note ?? "");
   const [receiptUrl, setReceiptUrl] = useState(existing?.receipt_url ?? "");
@@ -97,14 +109,15 @@ export function TransactionForm({
         note: note || null,
         receipt_url: receiptUrl || null,
       };
-      const { error } = existing
-        ? await supabase.from("transactions").update(payload).eq("id", existing.id)
-        : await supabase.from("transactions").insert(payload);
+      const { data: saved, error } = existing
+        ? await supabase.from("transactions").update(payload).eq("id", existing.id).select("id").single()
+        : await supabase.from("transactions").insert(payload).select("id").single();
       if (error) throw error;
       if (prefill?.detectionId) {
+        // Link the detection to the transaction it became, so it is never offered again
         await supabase
           .from("detected_transactions")
-          .update({ status: "confirmed" })
+          .update({ status: "confirmed", transaction_id: saved?.id ?? null })
           .eq("id", prefill.detectionId);
       }
       invalidate();

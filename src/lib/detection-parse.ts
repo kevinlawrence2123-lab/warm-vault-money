@@ -1,198 +1,277 @@
 /**
- * Pure parsing helpers for bank / mobile money notification text.
- * Shared by the ingest endpoint and the client (preview of a test message).
+ * Pure parsing helpers for bank / mobile money SMS and notification text.
+ * Shared by the ingest endpoint and the client (paste / share import).
+ *
+ * Heuristics (no AI): finds the transaction amount (never an account number,
+ * a date, the fee or the running balance), its direction, the fee, the balance,
+ * the operator, the counterparty, the date written in the message and a likely
+ * category.
  */
+
+export type TxType = "expense" | "income";
 
 export interface ParsedNotification {
   amount: number;
-  type: "expense" | "income";
+  type: TxType;
   merchant: string | null;
   balance: number | null;
   reference: string | null;
+  fee: number;
+  provider: string | null;
+  /** Date written in the message (YYYY-MM-DD), if any. */
+  date: string | null;
+  /** Category name guessed from keywords (English seed names, matched case-insensitively). */
+  categoryHint: string | null;
+  label: string;
 }
 
-const INCOME_WORDS = [
-  "received",
-  "credited",
-  "credit of",
-  "deposit",
-  "deposited",
-  "you have received",
-  "recu",
-  "reçu",
-  "crédité",
-  "credite",
-  "versement",
-  "dépôt",
-  "depot",
-  "entrée",
-  "remboursement",
-  "refund",
-  "salary",
-  "salaire",
+export const PROVIDERS: { name: string; re: RegExp; kind: "mobile_money" | "bank"; source: string }[] = [
+  { name: "Nita", re: /\bnita\b/i, kind: "mobile_money", source: "nita" },
+  { name: "Amana", re: /\bamana\b/i, kind: "mobile_money", source: "amana" },
+  { name: "Airtel Money", re: /airtel/i, kind: "mobile_money", source: "mobile_banking" },
+  { name: "Moov Money", re: /\bmoov\b|flooz/i, kind: "mobile_money", source: "mobile_banking" },
+  { name: "Orange Money", re: /orange\s*money/i, kind: "mobile_money", source: "mobile_banking" },
+  { name: "Wave", re: /\bwave\b/i, kind: "mobile_money", source: "mobile_banking" },
+  { name: "MTN MoMo", re: /\bmtn\b|\bmomo\b/i, kind: "mobile_money", source: "mobile_banking" },
+  { name: "Zamani Cash", re: /zamani/i, kind: "mobile_money", source: "mobile_banking" },
+  { name: "Ecobank", re: /ecobank/i, kind: "bank", source: "bank" },
+  { name: "BOA", re: /\bboa\b|bank of africa/i, kind: "bank", source: "bank" },
+  { name: "Sonibank", re: /sonibank/i, kind: "bank", source: "bank" },
+  { name: "BIA", re: /\bbia\b/i, kind: "bank", source: "bank" },
+  { name: "Coris Bank", re: /coris/i, kind: "bank", source: "bank" },
+  { name: "UBA", re: /\buba\b/i, kind: "bank", source: "bank" },
+  { name: "Société Générale", re: /soci[ée]t[ée]\s*g[ée]n[ée]rale/i, kind: "bank", source: "bank" },
+  { name: "Orabank", re: /orabank/i, kind: "bank", source: "bank" },
+  { name: "BSIC", re: /\bbsic\b/i, kind: "bank", source: "bank" },
 ];
 
-const EXPENSE_WORDS = [
-  "debited",
-  "debit of",
-  "withdraw",
-  "withdrawal",
-  "sent",
-  "paid",
-  "payment",
-  "purchase",
-  "spent",
-  "transfer to",
-  "retrait",
-  "débité",
-  "debite",
-  "paiement",
-  "payé",
-  "paye",
-  "achat",
-  "envoyé",
-  "envoye",
-  "prélèvement",
-  "prelevement",
+const CUR = "(?:f\\s?cfa|cfa|xof|fcfa|f|francs?|eur|€|usd|\\$|ngn|₦|ghs|mad|gbp|£|cad|jpy)";
+// 12 500 | 12.500 | 12,500 | 12500,00 | 12 500.50
+const NUM = "(\\d{1,3}(?:[\\s.\\u202f\\u00a0,]\\d{3})+(?:[.,]\\d{1,2})?|\\d+(?:[.,]\\d{1,2})?)";
+const AMOUNT_RE = new RegExp(`${NUM}\\s?${CUR}(?![a-z])|${CUR}\\s?${NUM}`, "gi");
+
+const CREDIT =
+  /(re[çc]u|recu|cr[ée]dit[ée]?|credited|received|deposit|d[ée]p[oô]t|versement|vous a (?:envoy|transf)|remboursement|refund|cash[\s-]?in|salaire|salary)/i;
+const DEBIT =
+  /(d[ée]bit[ée]?|debited|retrait|withdraw|paiement|pay[ée]|paid|payment|purchase|achat|spent|transf[ée]r[ée]?\s|transfert|transfer to|envoy[ée]|sent|cash[\s-]?out|factur|pr[ée]l[èe]v)/i;
+const NOISE =
+  /(code (?:de )?(?:v[ée]rification|confirmation|secret)|verification code|security code|one[- ]time|\botp\b|mot de passe|\bpin\b|promo|bonus offert|gagnez|tentez|f[ée]licitations? vous avez gagn)/i;
+
+const CATEGORY_RULES: [RegExp, string[]][] = [
+  [/salaire|salary|paie\b|payroll/i, ["salary", "salaire"]],
+  [/canal\+?|netflix|spotify|abonnement|subscription|forfait|internet|data|recharge/i, ["subscriptions", "abonnements"]],
+  [/carburant|essence|gasoil|station|taxi|transport|bus|yango|uber/i, ["transport"]],
+  [/loyer|rent\b|nigelec|senelec|\bcie\b|[ée]lectricit|seeg|\beau\b|snde|\bsde\b/i, ["housing", "logement"]],
+  [/pharmac|clinique|h[oô]pital|m[ée]dic|sant[ée]|health/i, ["health", "santé"]],
+  [/restaurant|resto|supermarch|march[ée]|boutique|alimentation|boulang|caf[ée]|food/i, ["food", "alimentation"]],
+  [/cin[ée]ma|concert|\bbar\b|sortie|loisir/i, ["leisure", "loisirs"]],
 ];
 
-/** Numbers like 12,500.75 / 12 500,75 / 12500 / 1.250,00 */
-const AMOUNT_RE =
-  /(?:^|[^\d])((?:\d{1,3}(?:[ .,\u00a0]\d{3})+|\d+)(?:[.,]\d{1,2})?)(?![\d])/g;
-
-const CURRENCY_HINT =
-  /(xof|fcfa|f\s?cfa|cfa|usd|eur|gbp|ngn|mad|cad|jpy|\$|€|£|₦)/i;
-
+/** Numbers like 12,500.75 / 12 500,75 / 12500 / 1.250,00 / 10.000 */
 export function parseAmount(raw: string): number | null {
-  const cleaned = raw.replace(/[\s\u00a0]/g, "");
-  const lastComma = cleaned.lastIndexOf(",");
-  const lastDot = cleaned.lastIndexOf(".");
-  const sep = Math.max(lastComma, lastDot);
-  let normalised: string;
-  if (sep === -1) {
-    normalised = cleaned;
-  } else {
-    const decimals = cleaned.length - sep - 1;
-    if (decimals === 1 || decimals === 2) {
-      normalised = `${cleaned.slice(0, sep).replace(/[.,]/g, "")}.${cleaned.slice(sep + 1)}`;
-    } else {
-      normalised = cleaned.replace(/[.,]/g, "");
-    }
-  }
-  const value = Number(normalised);
-  return Number.isFinite(value) ? value : null;
+  let t = raw.replace(/[\s  ]/g, "");
+  if (/^\d{1,3}([.,]\d{3})+$/.test(t)) t = t.replace(/[.,]/g, "");
+  else if (/^\d{1,3}([.,]\d{3})+[.,]\d{1,2}$/.test(t)) t = t.replace(/[.,](?=\d{3})/g, "").replace(",", ".");
+  else t = t.replace(",", ".");
+  const value = Number(t);
+  return Number.isFinite(value) && value > 0 ? value : null;
 }
-
-function scoreWords(text: string, words: string[]) {
-  return words.reduce((n, w) => (text.includes(w) ? n + 1 : n), 0);
-}
-
-const OTP_RE =
-  /\b(otp|one[- ]time|code (?:is|:)|verification code|security code|mot de passe|code de v[ée]rification|code secret|pin code)\b/i;
 
 /** True when the message is a transaction notice rather than an OTP/marketing text. */
 export function looksTransactional(text: string) {
-  const lower = text.toLowerCase();
-  if (OTP_RE.test(text)) return false;
-  const hasWord =
-    scoreWords(lower, INCOME_WORDS) > 0 || scoreWords(lower, EXPENSE_WORDS) > 0;
-  return hasWord || CURRENCY_HINT.test(text);
+  if (NOISE.test(text) && !/(d[ée]bit|cr[ée]dit|re[çc]u|retrait|paiement)/i.test(text)) return false;
+  return CREDIT.test(text) || DEBIT.test(text);
 }
 
-export function detectType(text: string): "expense" | "income" {
-  const lower = text.toLowerCase();
-  const income = scoreWords(lower, INCOME_WORDS);
-  const expense = scoreWords(lower, EXPENSE_WORDS);
-  if (income > expense) return "income";
-  return "expense";
+export function detectType(text: string): TxType {
+  if (/vous a (?:envoy|transf)|you have received|vous avez re[çc]u/i.test(text)) return "income";
+  const c = CREDIT.exec(text);
+  const d = DEBIT.exec(text);
+  if (c && d) return c.index < d.index ? "income" : "expense";
+  return c ? "income" : "expense";
 }
 
-function extractMerchant(text: string): string | null {
-  const patterns = [
-    /(?:to|at|chez|vers|à)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|ref|id|bal)\b|$)/i,
-    /(?:from|de|par)\s+([A-Za-zÀ-ÿ0-9&'’.\- ]{2,40}?)(?=[.,;]|\s+(?:on|le|at|à|chez|ref|id|bal)\b|$)/i,
-  ];
-  for (const re of patterns) {
-    const m = re.exec(text);
-    const value = m?.[1]?.trim();
-    if (value && !/^\d/.test(value) && !/^\d+$/.test(value)) {
-      const trimmed = value
-        .replace(/\s+(effectu[ée]?e?|r[ée]ussi[e]?|confirm[ée]?e?|success(ful)?|completed)$/i, "")
-        .replace(/\s{2,}/g, " ")
-        .trim();
-      if (trimmed) return trimmed.slice(0, 60);
+function parseDate(s: string): string | null {
+  const m = s.match(/(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/);
+  if (m) {
+    const [, dd = "", mm = "", yy = ""] = m;
+    const y = yy.length === 2 ? 2000 + Number(yy) : Number(yy);
+    const d = new Date(y, Number(mm) - 1, Number(dd));
+    if (!Number.isNaN(d.getTime()) && d.getMonth() === Number(mm) - 1) {
+      const p = (x: number) => String(x).padStart(2, "0");
+      return `${y}-${p(Number(mm))}-${p(Number(dd))}`;
     }
   }
-
-  return null;
+  return s.match(/(\d{4})-(\d{2})-(\d{2})/)?.[0] ?? null;
 }
 
 function extractReference(text: string): string | null {
-  const m = /(?:ref|reference|txn|transaction(?:\s*id)?|id)[^\dA-Za-z]{0,3}([A-Za-z0-9-]{4,32})/i.exec(
-    text,
+  const m = text.match(
+    /(?:\bref(?:[ée]rence)?|\btxn|\btrans(?:action)?\s*id|\bid\s*(?:trans\w*)?)\s*[:#.-]?\s*([A-Z0-9][A-Z0-9.-]{3,31})/i,
   );
-  return m?.[1] ?? null;
+  const ref = m?.[1];
+  return ref && /\d/.test(ref) ? ref.replace(/[.-]+$/, "") : null;
 }
 
-function extractBalance(text: string): number | null {
-  const m =
-    /(?:balance|bal|solde|nouveau solde)[^\d-]{0,12}((?:\d{1,3}(?:[ .,\u00a0]\d{3})+|\d+)(?:[.,]\d{1,2})?)/i.exec(
-      text,
-    );
-  return m?.[1] ? parseAmount(m[1]) : null;
+const STOP =
+  "(?:le|a|à|au|on|ref|r[ée]f|montant|nouveau|solde|bal|trans\\w*|id|est|r[ée]ussi|reussi|effectu[ée]e?|avec|frais|via|success\\w*|completed)";
+const BAD_START = /^(?:[ée]t[ée]|votre|vous|ete|un|une|des|ce|cette|your|you)\b/i;
+
+function extractMerchant(s: string, type: TxType): string | null {
+  const libelle = s.match(/libell[ée]\s*:?\s*([^.;\n]{2,40})/i);
+  if (libelle?.[1]) return libelle[1].trim();
+  if (type === "income") {
+    const sender = s.match(/([A-Za-zÀ-ÿ][A-Za-zÀ-ÿ .'-]{1,30}?)\s+vous a (?:envoy|transf)/i)?.[1];
+    if (sender && !BAD_START.test(sender.trim())) return sender.replace(/^.*[:]\s*/, "").trim();
+  }
+  const prep =
+    type === "income"
+      ? "(?:\\bde\\b|\\bdu\\b|\\bfrom\\b|\\bpar\\b)"
+      : "(?:\\bvers\\b|\\b[àa]\\b|\\bau\\b|\\bto\\b|\\bat\\b|\\bchez\\b|\\bpour\\b)";
+  const re = new RegExp(
+    `${prep}\\s+([A-Za-zÀ-ÿ0-9+&][A-Za-zÀ-ÿ0-9 .'’+&-]{1,40}?)(?=[,.;:]|\\s+${STOP}\\b|$)`,
+    "gi",
+  );
+  for (const m of s.matchAll(re)) {
+    const v = (m[1] ?? "").trim();
+    if (!v) continue;
+    if (BAD_START.test(v)) continue;
+    if (new RegExp(`^${NUM}\\s?${CUR}?$`, "i").test(v)) {
+      if (/^\+?\d{8,}$/.test(v.replace(/\s/g, ""))) return v; // phone number
+      continue; // an amount, not a counterparty
+    }
+    return v.slice(0, 60);
+  }
+  return null;
+}
+
+export function detectProvider(text: string) {
+  return PROVIDERS.find((p) => p.re.test(text)) ?? null;
 }
 
 /**
  * Extracts the transaction from a raw notification / SMS body.
- * Returns null when no plausible amount is present.
+ * Returns null for OTPs, promotions, balance-only messages or when no amount is present.
  */
-export function parseNotification(text: string): ParsedNotification | null {
-  if (!text || !text.trim()) return null;
-  if (!looksTransactional(text)) return null;
+export function parseNotification(raw: string): ParsedNotification | null {
+  const text = (raw ?? "").replace(/\s+/g, " ").trim();
+  if (!text || !looksTransactional(text)) return null;
 
-  const balance = extractBalance(text);
-  const candidates: number[] = [];
-  AMOUNT_RE.lastIndex = 0;
-  let match: RegExpExecArray | null;
-  while ((match = AMOUNT_RE.exec(text)) !== null) {
-    const around = text.slice(Math.max(0, match.index - 24), match.index + match[0].length + 12);
-    const value = parseAmount(match[1] ?? "");
-    if (value === null || value <= 0) continue;
-    // Skip the running balance and obvious dates / phone numbers.
-    if (balance !== null && value === balance) continue;
-    if (/\b(bal|balance|solde)\b/i.test(around) && !CURRENCY_HINT.test(match[1] ?? "")) {
-      if (balance === null) continue;
-    }
-    if (/\d{2}[/:-]\d{2}/.test(match[0])) continue;
-    candidates.push(value);
+  const amounts: { value: number; idx: number; ctx: string }[] = [];
+  for (const m of text.matchAll(AMOUNT_RE)) {
+    const value = parseAmount(m[1] ?? m[2] ?? "");
+    if (!value || value > 1e12) continue;
+    const idx = m.index ?? 0;
+    amounts.push({ value, idx, ctx: text.slice(Math.max(0, idx - 30), idx).toLowerCase() });
   }
+  if (!amounts.length) return null;
 
-  if (!candidates.length) return null;
+  const isBalance = (c: string) =>
+    /(solde|balance|\bbal\b|disponible|avoir)\s*(?:est|actuel|dispo\w*|:|de|is)?\s*[:=]?\s*$|solde[^.]{0,20}$/.test(c);
+  const isFee = (c: string) => /(frais|fee|fees|commission|taxe|tva)\s*[:=]?\s*(?:de|of)?\s*$/.test(c);
 
-  // The transaction amount is usually the first monetary value in the message.
-  const amount = candidates[0]!;
+  const balance = amounts.find((a) => isBalance(a.ctx))?.value ?? null;
+  const fee = amounts.find((a) => isFee(a.ctx))?.value ?? 0;
+  const main = amounts.find((a) => !isBalance(a.ctx) && !isFee(a.ctx));
+  if (!main) return null;
+
+  const type = detectType(text.slice(0, main.idx + 40));
+  const provider = detectProvider(text)?.name ?? null;
+  const merchant = extractMerchant(text, type);
+  const categoryHint = CATEGORY_RULES.find(([re]) => re.test(text))?.[1][0] ?? null;
+  const verb = /retrait|withdraw|cash[\s-]?out/i.test(text)
+    ? "Retrait"
+    : /paiement|payment|achat|purchase|pay[ée]|paid/i.test(text)
+      ? "Paiement"
+      : /transf|envoy|sent/i.test(text)
+        ? type === "income"
+          ? "Transfert reçu"
+          : "Transfert envoyé"
+        : type === "income"
+          ? "Crédit"
+          : "Débit";
+  const label = [verb, merchant ? (type === "income" ? `de ${merchant}` : `· ${merchant}`) : null, provider ? `(${provider})` : null]
+    .filter(Boolean)
+    .join(" ");
 
   return {
-    amount,
-    type: detectType(text),
-    merchant: extractMerchant(text),
+    amount: main.value,
+    type,
+    merchant,
     balance,
     reference: extractReference(text),
+    fee,
+    provider,
+    date: parseDate(text),
+    categoryHint,
+    label,
   };
 }
 
-/** Normalises an app/package name into one of the known detection sources. */
+/** Finds the category matching a parsed hint, in English or French seed names. */
+export function matchCategoryHint<C extends { id: string; name: string; type: string }>(
+  hint: string | null,
+  type: TxType,
+  categories: C[],
+): C | null {
+  if (!hint) return null;
+  const names = CATEGORY_RULES.find(([, n]) => n[0] === hint)?.[1] ?? [hint];
+  return (
+    categories.find(
+      (c) => c.type === type && names.some((n) => c.name.toLowerCase().includes(n.toLowerCase())),
+    ) ?? null
+  );
+}
+
+/** Normalises an app/package name or message into one of the known detection sources. */
 export function resolveSourceKey(input: string | null | undefined): string {
-  const value = (input ?? "").toLowerCase();
-  if (value.includes("nita")) return "nita";
-  if (value.includes("amana")) return "amana";
-  if (
-    value.includes("mobile") ||
-    value.includes("momo") ||
-    value.includes("wallet") ||
-    value.includes("money")
-  ) {
+  const value = input ?? "";
+  const provider = detectProvider(value);
+  if (provider) return provider.source;
+  const lower = value.toLowerCase();
+  if (lower.includes("mobile") || lower.includes("momo") || lower.includes("wallet") || lower.includes("money")) {
     return "mobile_banking";
   }
   return "bank";
+}
+
+/** Shape of a message without amounts or short words, used for "always ignore". */
+export function messageShape(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\d+/g, " ")
+    .replace(/[^a-z ]+/g, " ")
+    .split(" ")
+    .filter((w) => w.length > 2)
+    .join(" ");
+}
+
+/** True when the message has the same shape as a muted one (stored as the original message). */
+export function isMutedMessage(text: string, mutedPatterns: string[]) {
+  const shape = messageShape(text);
+  return mutedPatterns.some((p) => {
+    const ps = messageShape(p ?? "");
+    if (!ps) return false;
+    const head = ps.split(" ").slice(0, 6).join(" ");
+    return ps === shape || (head.length > 8 && shape.includes(head));
+  });
+}
+
+/** Account whose name contains the operator name (e.g. account "Nita" for a Nita SMS). */
+export function matchAccountByProvider<A extends { id: string; name: string }>(provider: string | null, accounts: A[]) {
+  if (!provider) return null;
+  const first = (provider.split(" ")[0] ?? provider).toLowerCase();
+  return accounts.find((a) => a.name.toLowerCase().includes(first)) ?? null;
+}
+
+/** Splits pasted text into individual messages (blank line between two SMS, or one per line). */
+export function splitMessages(input: string): string[] {
+  const blocks = input.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  if (blocks.length > 1) return blocks;
+  const lines = input.split("\n").map((l) => l.trim()).filter(Boolean);
+  const hasAmount = (l: string) => new RegExp(AMOUNT_RE.source, "i").test(l);
+  if (lines.length > 1 && lines.every(hasAmount)) return lines;
+  return blocks;
 }
